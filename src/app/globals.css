@@ -3,19 +3,95 @@
 @tailwind utilities;
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  --foreground-rgb: 255, 255, 255;
+  --background-start-rgb: 135, 206, 235;
+  --background-end-rgb: 0, 191, 255;
 }
 
 body {
-  color: var(--foreground);
-  background: var(--background);
-  font-family: Arial, Helvetica, sans-serif;
+  color: rgb(var(--foreground-rgb));
+  background: linear-gradient(
+    to bottom,
+    rgb(var(--background-start-rgb)),
+    rgb(var(--background-end-rgb))
+  );
+  min-height: 100vh;
+}
+
+.battleship-grid {
+  display: grid;
+  grid-template-columns: repeat(10, 1fr);
+  gap: 2px;
+  background: rgba(0, 0, 0, 0.5);
+  padding: 10px;
+  border-radius: 8px;
+}
+
+.cell {
+  aspect-ratio: 1;
+  background: #2a4365;
+  border-radius: 4px;
+  transition: all 0.2s;
+}
+
+.cell:hover {
+  background: #2c5282;
+}
+
+.cell.ship {
+  background: #ecc94b;
+}
+
+.cell.hit {
+  background: #e53e3e;
+}
+
+.cell.miss {
+  background: #718096;
+}
+
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.modal-content {
+  background: #1a202c;
+  padding: 2rem;
+  border-radius: 1rem;
+  max-width: 90%;
+  width: 500px;
+}
+
+.toggle-switch {
+  width: 3rem;
+  height: 1.5rem;
+  background: #4a5568;
+  border-radius: 9999px;
+  position: relative;
+  transition: all 0.2s;
+}
+
+.toggle-switch.active {
+  background: #48bb78;
+}
+
+.toggle-switch::after {
+  content: '';
+  position: absolute;
+  width: 1.25rem;
+  height: 1.25rem;
+  background: white;
+  border-radius: 50%;
+  top: 0.125rem;
+  left: 0.125rem;
+  transition: all 0.2s;
+}
+
+.toggle-switch.active::after {
+  transform: translateX(1.5rem);
 }
