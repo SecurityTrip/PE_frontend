@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import { Auth } from './components/Auth';
 import { Register } from './components/Register';
@@ -9,26 +9,83 @@ import { Rules } from './components/Rules';
 import { SystemInfo } from './components/SystemInfo';
 import { GameBoard } from './components/GameBoard';
 import { Settings } from './components/Settings';
+import { authService, User } from './services/authService';
 
 export default function Home() {
+  // Состояние аутентификации
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [authScreen, setAuthScreen] = useState<'login' | 'register'>('login');
+  const [user, setUser] = useState<User | null>(null);
+  
+  // Состояние UI
   const [activeScreen, setActiveScreen] = useState('about'); // about, singleplayer, createRoom, join, profile, rules, authors, system
   const [showSettings, setShowSettings] = useState(false);
   const [musicEnabled, setMusicEnabled] = useState(true);
   const [soundEnabled, setSoundEnabled] = useState(true);
+  
+  // Состояния для инпутов
+  const [roomCode, setRoomCode] = useState('758n7984hd9f84jre');
+  const [joinRoomCode, setJoinRoomCode] = useState('');
+  const [username, setUsername] = useState('');
+  const [oldPassword, setOldPassword] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [selectedAvatar, setSelectedAvatar] = useState(0);
+
+  // Проверить аутентификацию при загрузке
+  useEffect(() => {
+    const checkAuth = () => {
+      const isAuth = authService.isAuthenticated();
+      setIsAuthenticated(isAuth);
+      
+      if (isAuth) {
+        setUser(authService.getUser());
+      }
+      
+      setIsLoading(false);
+    };
+    
+    checkAuth();
+  }, []);
 
   // Моковые данные для игры
   const mockPlayerBoard = Array(10).fill(0).map(() => Array(10).fill(0));
   const mockOpponentBoard = Array(10).fill(0).map(() => Array(10).fill(0));
 
-  // Обработчики
-  const handleLogin = (username: string, password: string) => {
-    console.log('Login:', username, password);
+  // Обработчики аутентификации
+  const handleLogin = async (username: string, password: string) => {
+    try {
+      const token = await authService.login(username, password);
+      if (token) {
+        const userData = authService.getUser();
+        setUser(userData);
+        setIsAuthenticated(true);
+      }
+    } catch (error) {
+      console.error('Login failed:', error);
+    }
   };
 
-  const handleRegister = (username: string, password: string, avatar: number) => {
-    console.log('Register:', username, password, avatar);
+  const handleRegister = async (username: string, password: string, avatar: number) => {
+    try {
+      const result = await authService.register(username, password, avatar);
+      if (result) {
+        // После успешной регистрации сразу входим
+        await handleLogin(username, password);
+      }
+    } catch (error) {
+      console.error('Registration failed:', error);
+    }
   };
 
+  const handleLogout = () => {
+    authService.logout();
+    setIsAuthenticated(false);
+    setUser(null);
+  };
+
+  // Обработчики UI
   const handleCellClick = (x: number, y: number, isPlayerBoard: boolean) => {
     console.log('Cell clicked:', x, y, isPlayerBoard);
   };
@@ -49,7 +106,8 @@ export default function Home() {
             <div className="flex items-center gap-2">
               <input
                 type="text"
-                value="758n7984hd9f84jre"
+                value={roomCode}
+                onChange={(e) => setRoomCode(e.target.value)}
                 readOnly
                 className="flex-1 bg-white text-black py-2 px-4 rounded-lg"
               />
@@ -66,6 +124,8 @@ export default function Home() {
             <div className="flex items-center gap-2">
               <input
                 type="text"
+                value={joinRoomCode}
+                onChange={(e) => setJoinRoomCode(e.target.value)}
                 placeholder="Код комнаты"
                 className="flex-1 bg-white text-black py-2 px-4 rounded-lg"
               />
@@ -86,7 +146,10 @@ export default function Home() {
                   {Array.from({ length: 10 }, (_, i) => (
                     <button
                       key={i}
-                      className="w-12 h-12 rounded-lg bg-orange-400 hover:ring-2 hover:ring-blue-500"
+                      onClick={() => setSelectedAvatar(i)}
+                      className={`w-12 h-12 rounded-lg bg-orange-400 hover:ring-2 hover:ring-blue-500 ${
+                        selectedAvatar === i ? 'ring-2 ring-blue-500' : ''
+                      }`}
                     >
                       <span className="text-xl">😊</span>
                     </button>
@@ -97,6 +160,8 @@ export default function Home() {
                 <label className="block mb-2">Сменить логин:</label>
                 <input
                   type="text"
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value)}
                   className="w-full bg-white text-black py-2 px-4 rounded-lg"
                 />
               </div>
@@ -104,16 +169,22 @@ export default function Home() {
                 <label className="block mb-2">Старый пароль:</label>
                 <input
                   type="password"
+                  value={oldPassword}
+                  onChange={(e) => setOldPassword(e.target.value)}
                   className="w-full bg-white text-black py-2 px-4 rounded-lg mb-2"
                 />
                 <label className="block mb-2">Новый пароль:</label>
                 <input
                   type="password"
+                  value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
                   className="w-full bg-white text-black py-2 px-4 rounded-lg mb-2"
                 />
                 <label className="block mb-2">Повторите пароль:</label>
                 <input
                   type="password"
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
                   className="w-full bg-white text-black py-2 px-4 rounded-lg"
                 />
               </div>
@@ -149,6 +220,26 @@ export default function Home() {
     }
   };
 
+  // Показ экранов аутентификации
+  if (!isAuthenticated) {
+    return (
+      <main className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-b from-sky-300 to-sky-500">
+        {authScreen === 'login' ? (
+          <Auth 
+            onLogin={handleLogin} 
+            onRegisterClick={() => setAuthScreen('register')} 
+          />
+        ) : (
+          <Register 
+            onRegister={handleRegister} 
+            onLoginClick={() => setAuthScreen('login')} 
+          />
+        )}
+      </main>
+    );
+  }
+
+  // Показ основного интерфейса
   return (
     <main className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-b from-sky-300 to-sky-500">
       <div className="relative w-full max-w-4xl">
@@ -157,13 +248,14 @@ export default function Home() {
           МОРСКОЙ БОЙ
           <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full flex justify-center">
             <div className="relative w-64 h-12">
-              <Image
+              {/* Временно отключим изображение корабля */}
+              {/* <Image
                 src="/images/battleships.png"
                 alt="Battleships"
                 width={200}
                 height={50}
                 className="opacity-25"
-              />
+              /> */}
             </div>
           </div>
         </h1>
@@ -208,6 +300,11 @@ export default function Home() {
                 onClick={() => setActiveScreen('system')}
                 className={`w-full text-white py-2 px-4 rounded-lg hover:bg-gray-700 transition ${activeScreen === 'system' ? 'bg-gray-700' : ''}`}>
                 О системе
+              </button>
+              <button 
+                onClick={handleLogout}
+                className="w-full text-white py-2 px-4 rounded-lg bg-red-600 hover:bg-red-700 transition mt-4">
+                Выйти
               </button>
             </div>
 
