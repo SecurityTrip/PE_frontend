@@ -1,24 +1,29 @@
-FROM node:20-alpine AS base
-
-# Установка рабочей директории
+# Stage 1: Сборка приложения
+FROM node:20-alpine AS builder
 WORKDIR /app
 
-# Копирование файлов зависимостей
+# Копирование зависимостей и установка пакетов
 COPY package.json package-lock.json ./
-
-# Установка зависимостей
 RUN npm ci
 
-# Копирование исходного кода
+# Копирование исходников и сборка проекта
 COPY . .
-
-# Полное отключение ESLint для сборки
-RUN rm -f .eslintrc* && \
-    echo '{"root": true, "extends": ["next"], "rules": { "@typescript-eslint/no-unused-vars": "off" }}' > .eslintrc && \
-    echo '{"extends": ["plugin:@next/next/recommended"], "rules": { "@typescript-eslint/no-unused-vars": "off" }}' > .eslintrc.json
-
-# Сборка приложения 
 RUN npm run build
 
-# Запуск приложения
-CMD ["npm", "run", "start"] 
+# Stage 2: Подготовка продакшн-образа
+FROM node:20-alpine AS runner
+WORKDIR /app
+ENV NODE_ENV production
+
+# Копируем необходимые файлы из стадии сборки
+COPY --from=builder /app/next.config.ts ./
+COPY --from=builder /app/public ./public
+COPY --from=builder /app/.next ./.next
+COPY --from=builder /app/node_modules ./node_modules
+COPY --from=builder /app/package.json ./
+COPY --from=builder /app/package-lock.json ./
+# Открываем порт, на котором работает приложение
+EXPOSE 3000
+
+# Команда для запуска приложения
+CMD ["npm", "start"]
