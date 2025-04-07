@@ -1,24 +1,36 @@
 import React, { useState } from 'react';
 
 interface AuthProps {
-  onLogin: (username: string, password: string) => void;
+  onLogin: (username: string, password: string) => Promise<boolean>;
   onRegisterClick: () => void;
+  error?: string | null;
 }
 
-export const Auth: React.FC<AuthProps> = ({ onLogin, onRegisterClick }) => {
+export const Auth: React.FC<AuthProps> = ({ onLogin, onRegisterClick, error }) => {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
+  const [localError, setLocalError] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!username || !password) {
-      setError('Введите логин и пароль');
+      setLocalError('Введите логин и пароль');
       return;
     }
-    setError('');
-    onLogin(username, password);
+    
+    setLocalError('');
+    setIsLoading(true);
+    
+    try {
+      await onLogin(username, password);
+    } finally {
+      setIsLoading(false);
+    }
   };
+
+  // Отображаем глобальную ошибку (от родительского компонента) или локальную ошибку
+  const displayError = error || localError;
 
   return (
     <div className="flex flex-col items-center">
@@ -37,6 +49,7 @@ export const Auth: React.FC<AuthProps> = ({ onLogin, onRegisterClick }) => {
               value={username}
               onChange={(e) => setUsername(e.target.value)}
               className="w-full px-4 py-3 bg-white text-[#5E4B3E] focus:outline-none"
+              disabled={isLoading}
             />
           </div>
           
@@ -47,16 +60,20 @@ export const Auth: React.FC<AuthProps> = ({ onLogin, onRegisterClick }) => {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               className="w-full px-4 py-3 bg-white text-[#5E4B3E] focus:outline-none"
+              disabled={isLoading}
             />
           </div>
           
-          {error && <p className="text-red-500 text-center">{error}</p>}
+          {displayError && (
+            <p className="text-red-500 text-center">{displayError}</p>
+          )}
           
           <button 
             type="submit"
-            className="w-full bg-green-500 text-white py-3 rounded-full hover:bg-green-600 transition"
+            className={`w-full ${isLoading ? 'bg-gray-400' : 'bg-green-500 hover:bg-green-600'} text-white py-3 rounded-full transition`}
+            disabled={isLoading}
           >
-            Войти
+            {isLoading ? 'Вход...' : 'Войти'}
           </button>
         </form>
         
@@ -64,6 +81,7 @@ export const Auth: React.FC<AuthProps> = ({ onLogin, onRegisterClick }) => {
           <button
             onClick={onRegisterClick}
             className="text-blue-600 hover:underline text-center"
+            disabled={isLoading}
           >
             Зарегистрироваться
           </button>

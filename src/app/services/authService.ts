@@ -5,6 +5,10 @@ export interface User {
   avatar: number;
 }
 
+export interface AuthError {
+  message: string;
+}
+
 // API URLs
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
 const LOGIN_URL = `${API_URL}/auth/signin`;
@@ -18,7 +22,7 @@ const USER_KEY = 'battleship_user';
 // Функции работы с JWT
 export const authService = {
   // Авторизация
-  login: async (username: string, password: string): Promise<string> => {
+  login: async (username: string, password: string): Promise<string | AuthError> => {
     try {
       const response = await fetch(LOGIN_URL, {
         method: 'POST',
@@ -29,11 +33,18 @@ export const authService = {
       });
       
       if (!response.ok) {
-        throw new Error('Ошибка авторизации');
+        // Обрабатываем ошибку из бэкенда
+        const errorText = await response.text();
+        return { message: errorText || 'Ошибка авторизации' };
       }
       
       // Бэкенд возвращает токен как строку, а не как JSON
       const token = await response.text();
+      
+      // Если token пустой или некорректный, возвращаем ошибку
+      if (!token || token.trim() === '') {
+        return { message: 'Получен пустой токен' };
+      }
       
       // Создаем объект пользователя
       const userData: User = {
@@ -49,27 +60,12 @@ export const authService = {
       return token;
     } catch (error) {
       console.error('Login error:', error);
-      
-      // Заглушка для тестирования при отсутствии бэкенда
-      const mockToken = 'fake_jwt_token';
-      
-      // Создаем объект пользователя
-      const userData: User = {
-        id: username, // Используем username как id
-        username: username,
-        avatar: 0, // Дефолтный аватар
-      };
-      
-      // Сохраняем в localStorage
-      localStorage.setItem(TOKEN_KEY, mockToken);
-      localStorage.setItem(USER_KEY, JSON.stringify(userData));
-      
-      return mockToken;
+      return { message: error instanceof Error ? error.message : 'Ошибка авторизации' };
     }
   },
   
   // Регистрация
-  register: async (username: string, password: string, avatar: number): Promise<string> => {
+  register: async (username: string, password: string, avatar: number): Promise<string | AuthError> => {
     try {
       const response = await fetch(REGISTER_URL, {
         method: 'POST',
@@ -80,23 +76,28 @@ export const authService = {
       });
       
       if (!response.ok) {
-        throw new Error('Ошибка регистрации');
+        // Обрабатываем ошибку из бэкенда
+        const errorText = await response.text();
+        return { message: errorText || 'Ошибка регистрации' };
       }
       
       // Бэкенд возвращает просто строку, а не JSON
       const result = await response.text();
       
+      // Проверка валидности результата регистрации
+      if (!result || result.trim() === '') {
+        return { message: 'Регистрация не выполнена' };
+      }
+      
       return result;
     } catch (error) {
       console.error('Register error:', error);
-      
-      // Заглушка для тестирования при отсутствии бэкенда
-      return username;
+      return { message: error instanceof Error ? error.message : 'Ошибка регистрации' };
     }
   },
   
   // Обновление токена
-  refreshToken: async (): Promise<string | null> => {
+  refreshToken: async (): Promise<string | AuthError | null> => {
     const token = authService.getToken();
     
     if (!token) {
@@ -112,7 +113,8 @@ export const authService = {
       });
       
       if (!response.ok) {
-        throw new Error('Ошибка обновления токена');
+        const errorText = await response.text();
+        return { message: errorText || 'Ошибка обновления токена' };
       }
       
       // Бэкенд возвращает новый токен как строку
@@ -124,7 +126,7 @@ export const authService = {
       return newToken;
     } catch (error) {
       console.error('Token refresh error:', error);
-      return null;
+      return { message: error instanceof Error ? error.message : 'Ошибка обновления токена' };
     }
   },
   

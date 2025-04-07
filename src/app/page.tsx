@@ -9,7 +9,7 @@ import { Rules } from './components/Rules';
 import { SystemInfo } from './components/SystemInfo';
 import { GameBoard } from './components/GameBoard';
 import { Settings } from './components/Settings';
-import { authService, User } from './services/authService';
+import { authService, User, AuthError } from './services/authService';
 
 export default function Home() {
   // Состояние аутентификации
@@ -17,6 +17,7 @@ export default function Home() {
   const [isLoading, setIsLoading] = useState(true);
   const [authScreen, setAuthScreen] = useState<'login' | 'register'>('login');
   const [user, setUser] = useState<User | null>(null);
+  const [authError, setAuthError] = useState<string | null>(null);
   
   // Состояние UI
   const [activeScreen, setActiveScreen] = useState('about'); // about, singleplayer, createRoom, join, profile, rules, authors, system
@@ -55,27 +56,46 @@ export default function Home() {
 
   // Обработчики аутентификации
   const handleLogin = async (username: string, password: string) => {
+    setAuthError(null); // Сбрасываем предыдущую ошибку
     try {
-      const token = await authService.login(username, password);
-      if (token) {
-        const userData = authService.getUser();
-        setUser(userData);
-        setIsAuthenticated(true);
+      const result = await authService.login(username, password);
+      
+      // Проверяем, является ли результат ошибкой
+      if (typeof result === 'object' && 'message' in result) {
+        setAuthError(result.message);
+        return false;
       }
+      
+      // Если авторизация успешна
+      const userData = authService.getUser();
+      setUser(userData);
+      setIsAuthenticated(true);
+      return true;
     } catch (error) {
       console.error('Login failed:', error);
+      setAuthError('Произошла неизвестная ошибка при входе');
+      return false;
     }
   };
 
   const handleRegister = async (username: string, password: string, avatar: number) => {
+    setAuthError(null); // Сбрасываем предыдущую ошибку
     try {
       const result = await authService.register(username, password, avatar);
-      if (result) {
-        // После успешной регистрации сразу входим
-        await handleLogin(username, password);
+      
+      // Проверяем, является ли результат ошибкой
+      if (typeof result === 'object' && 'message' in result) {
+        setAuthError(result.message);
+        return false;
       }
+      
+      // Если регистрация успешна, выполняем вход
+      const loginSuccess = await handleLogin(username, password);
+      return loginSuccess;
     } catch (error) {
       console.error('Registration failed:', error);
+      setAuthError('Произошла неизвестная ошибка при регистрации');
+      return false;
     }
   };
 
@@ -228,11 +248,13 @@ export default function Home() {
           <Auth 
             onLogin={handleLogin} 
             onRegisterClick={() => setAuthScreen('register')} 
+            error={authError}
           />
         ) : (
           <Register 
             onRegister={handleRegister} 
             onLoginClick={() => setAuthScreen('login')} 
+            error={authError}
           />
         )}
       </main>

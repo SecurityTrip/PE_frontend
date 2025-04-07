@@ -1,40 +1,51 @@
 import React, { useState } from 'react';
 
 interface RegisterProps {
-  onRegister: (username: string, password: string, avatar: number) => void;
+  onRegister: (username: string, password: string, avatar: number) => Promise<boolean>;
   onLoginClick: () => void;
+  error?: string | null;
 }
 
-export const Register: React.FC<RegisterProps> = ({ onRegister, onLoginClick }) => {
+export const Register: React.FC<RegisterProps> = ({ onRegister, onLoginClick, error }) => {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [selectedAvatar, setSelectedAvatar] = useState(0);
-  const [error, setError] = useState('');
+  const [localError, setLocalError] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
 
   const avatars = Array.from({ length: 10 }, (_, i) => i);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!username) {
-      setError('Введите логин');
+      setLocalError('Введите логин');
       return;
     }
     
     if (!password) {
-      setError('Введите пароль');
+      setLocalError('Введите пароль');
       return;
     }
     
     if (password !== confirmPassword) {
-      setError('Пароли не совпадают');
+      setLocalError('Пароли не совпадают');
       return;
     }
     
-    setError('');
-    onRegister(username, password, selectedAvatar);
+    setLocalError('');
+    setIsLoading(true);
+    
+    try {
+      await onRegister(username, password, selectedAvatar);
+    } finally {
+      setIsLoading(false);
+    }
   };
+
+  // Отображаем глобальную ошибку (от родительского компонента) или локальную ошибку
+  const displayError = error || localError;
 
   return (
     <div className="flex flex-col items-center">
@@ -53,6 +64,7 @@ export const Register: React.FC<RegisterProps> = ({ onRegister, onLoginClick }) 
               value={username}
               onChange={(e) => setUsername(e.target.value)}
               className="w-full px-4 py-3 bg-white text-[#5E4B3E] focus:outline-none"
+              disabled={isLoading}
             />
           </div>
           
@@ -63,6 +75,7 @@ export const Register: React.FC<RegisterProps> = ({ onRegister, onLoginClick }) 
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               className="w-full px-4 py-3 bg-white text-[#5E4B3E] focus:outline-none"
+              disabled={isLoading}
             />
           </div>
           
@@ -73,6 +86,7 @@ export const Register: React.FC<RegisterProps> = ({ onRegister, onLoginClick }) 
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
               className="w-full px-4 py-3 bg-white text-[#5E4B3E] focus:outline-none"
+              disabled={isLoading}
             />
           </div>
           
@@ -91,6 +105,7 @@ export const Register: React.FC<RegisterProps> = ({ onRegister, onLoginClick }) 
                       ? 'ring-2 ring-blue-500'
                       : 'hover:ring-2 hover:ring-blue-300'
                   }`}
+                  disabled={isLoading}
                 >
                   <span className="text-xl">😊</span>
                 </button>
@@ -98,13 +113,16 @@ export const Register: React.FC<RegisterProps> = ({ onRegister, onLoginClick }) 
             </div>
           </div>
           
-          {error && <p className="text-red-500 text-center">{error}</p>}
+          {displayError && (
+            <p className="text-red-500 text-center">{displayError}</p>
+          )}
           
           <button 
             type="submit"
-            className="w-full bg-green-500 text-white py-3 rounded-full hover:bg-green-600 transition"
+            className={`w-full ${isLoading ? 'bg-gray-400' : 'bg-green-500 hover:bg-green-600'} text-white py-3 rounded-full transition`}
+            disabled={isLoading}
           >
-            Зарегистрироваться
+            {isLoading ? 'Регистрация...' : 'Зарегистрироваться'}
           </button>
         </form>
         
@@ -112,6 +130,7 @@ export const Register: React.FC<RegisterProps> = ({ onRegister, onLoginClick }) 
           <button
             onClick={onLoginClick}
             className="text-blue-600 hover:underline text-center"
+            disabled={isLoading}
           >
             У меня уже есть аккаунт, войти
           </button>
