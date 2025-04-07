@@ -9,6 +9,9 @@ import { Rules } from './components/Rules';
 import { SystemInfo } from './components/SystemInfo';
 import { GameBoard } from './components/GameBoard';
 import { Settings } from './components/Settings';
+import { LobbyList } from './components/LobbyList';
+import { CreateLobby } from './components/CreateLobby';
+import { LobbyView } from './components/LobbyView';
 import { authService, User, AuthError } from './services/authService';
 
 export default function Home() {
@@ -20,13 +23,18 @@ export default function Home() {
   const [authError, setAuthError] = useState<string | null>(null);
   
   // Состояние UI
-  const [activeScreen, setActiveScreen] = useState('about'); // about, singleplayer, createRoom, join, profile, rules, authors, system
+  const [activeScreen, setActiveScreen] = useState('about'); // about, singleplayer, multiPlayer, profile, rules, authors, system
   const [showSettings, setShowSettings] = useState(false);
   const [musicEnabled, setMusicEnabled] = useState(true);
   const [soundEnabled, setSoundEnabled] = useState(true);
   
+  // Состояние лобби
+  const [lobbyView, setLobbyView] = useState<'list' | 'create' | 'view'>('list');
+  const [activeLobbyId, setActiveLobbyId] = useState<string | null>(null);
+  const [inGame, setInGame] = useState(false);
+  
   // Состояния для инпутов
-  const [roomCode, setRoomCode] = useState('758n7984hd9f84jre');
+  const [roomCode, setRoomCode] = useState('');
   const [joinRoomCode, setJoinRoomCode] = useState('');
   const [username, setUsername] = useState('');
   const [oldPassword, setOldPassword] = useState('');
@@ -103,6 +111,10 @@ export default function Home() {
     authService.logout();
     setIsAuthenticated(false);
     setUser(null);
+    setActiveScreen('about');
+    setLobbyView('list');
+    setActiveLobbyId(null);
+    setInGame(false);
   };
 
   // Обработчики UI
@@ -114,50 +126,90 @@ export default function Home() {
     console.log('Difficulty selected:', difficulty);
   };
 
+  // Обработчики лобби
+  const handleCreateLobby = () => {
+    setActiveScreen('multiPlayer');
+    setLobbyView('create');
+  };
+
+  const handleLobbyCreated = (lobbyId: string) => {
+    setActiveLobbyId(lobbyId);
+    setLobbyView('view');
+  };
+
+  const handleJoinLobby = (lobbyId: string) => {
+    setActiveLobbyId(lobbyId);
+    setLobbyView('view');
+  };
+
+  const handleLeaveLobby = () => {
+    setActiveLobbyId(null);
+    setLobbyView('list');
+    setInGame(false);
+  };
+
+  const handleStartGame = () => {
+    setInGame(true);
+  };
+
   // Рендер правой части в зависимости от выбранного пункта меню
   const renderRightSection = () => {
     switch (activeScreen) {
       case 'singleplayer':
         return <DifficultySelect onSelect={handleDifficultySelect} />;
-      case 'createRoom':
-        return (
-          <div className="bg-gray-900/60 rounded-2xl p-6 text-white">
-            <h2 className="text-2xl mb-4">Сгенерированный код:</h2>
-            <div className="flex items-center gap-2">
-              <input
-                type="text"
-                value={roomCode}
-                onChange={(e) => setRoomCode(e.target.value)}
-                readOnly
-                className="flex-1 bg-white text-black py-2 px-4 rounded-lg"
+      
+      case 'multiPlayer':
+        if (inGame) {
+          return (
+            <div className="bg-gray-800/70 rounded-2xl p-6 text-white">
+              <div className="flex justify-between items-center mb-6">
+                <h2 className="text-2xl font-bold">Игра</h2>
+                <button
+                  onClick={handleLeaveLobby}
+                  className="px-4 py-2 bg-red-500 rounded-lg hover:bg-red-600 transition"
+                >
+                  Покинуть игру
+                </button>
+              </div>
+              <GameBoard
+                playerName={user?.username || "Вы"}
+                opponentName="Противник"
+                playerBoard={mockPlayerBoard}
+                opponentBoard={mockOpponentBoard}
+                onCellClick={handleCellClick}
               />
-              <button className="bg-green-500 text-white py-2 px-4 rounded-lg hover:bg-green-600 transition">
-                Скопировать
-              </button>
             </div>
-          </div>
-        );
-      case 'join':
-        return (
-          <div className="bg-gray-900/60 rounded-2xl p-6 text-white">
-            <h2 className="text-2xl mb-4">Введите код комнаты:</h2>
-            <div className="flex items-center gap-2">
-              <input
-                type="text"
-                value={joinRoomCode}
-                onChange={(e) => setJoinRoomCode(e.target.value)}
-                placeholder="Код комнаты"
-                className="flex-1 bg-white text-black py-2 px-4 rounded-lg"
+          );
+        } else {
+          if (lobbyView === 'list') {
+            return (
+              <LobbyList 
+                onJoinLobby={handleJoinLobby} 
+                onCreateLobby={handleCreateLobby} 
               />
-              <button className="bg-green-500 text-white py-2 px-4 rounded-lg hover:bg-green-600 transition">
-                Войти
-              </button>
-            </div>
-          </div>
-        );
+            );
+          } else if (lobbyView === 'create') {
+            return (
+              <CreateLobby 
+                onLobbyCreated={handleLobbyCreated} 
+                onCancel={() => setLobbyView('list')} 
+              />
+            );
+          } else if (lobbyView === 'view' && activeLobbyId) {
+            return (
+              <LobbyView 
+                lobbyId={activeLobbyId} 
+                onStartGame={handleStartGame} 
+                onLeaveLobby={handleLeaveLobby} 
+              />
+            );
+          }
+        }
+        return null;
+        
       case 'profile':
         return (
-          <div className="bg-gray-900/60 rounded-2xl p-6 text-white">
+          <div className="bg-gray-800/70 rounded-2xl p-6 text-white">
             <h2 className="text-2xl mb-4">Настройки профиля</h2>
             <div className="space-y-4">
               <div>
@@ -200,7 +252,7 @@ export default function Home() {
                   onChange={(e) => setNewPassword(e.target.value)}
                   className="w-full bg-white text-black py-2 px-4 rounded-lg mb-2"
                 />
-                <label className="block mb-2">Повторите пароль:</label>
+                <label className="block mb-2">Подтвердите пароль:</label>
                 <input
                   type="password"
                   value={confirmPassword}
@@ -208,9 +260,11 @@ export default function Home() {
                   className="w-full bg-white text-black py-2 px-4 rounded-lg"
                 />
               </div>
-              <button className="w-full bg-green-500 text-white py-2 px-4 rounded-lg hover:bg-green-600 transition">
-                Сохранить изменения
-              </button>
+              <div>
+                <button className="w-full bg-green-500 text-white py-2 px-4 rounded-lg hover:bg-green-600 transition">
+                  Сохранить изменения
+                </button>
+              </div>
             </div>
           </div>
         );
@@ -218,12 +272,14 @@ export default function Home() {
         return <Rules />;
       case 'authors':
         return (
-          <div className="bg-gray-900/60 rounded-2xl p-6 text-white">
+          <div className="bg-gray-800/70 rounded-2xl p-6 text-white">
             <h2 className="text-2xl mb-4">Об авторах</h2>
             <div className="space-y-4">
-              <h3 className="text-xl">Фронтенд: Паршин Никита</h3>
-              <h3 className="text-xl">Бэкэнд: Лысов Илья</h3>
-              <h3 className="text-xl">Документация: Лебедев Евгений</h3>
+              <ul className="list-disc pl-5 space-y-2">
+                <li><a href="https://github.com/SecurityTrip" className="text-blue-400 hover:underline" target="_blank" rel="noopener noreferrer">SecurityTrip</a></li>
+                <li><a href="https://github.com/F4NTOM41K" className="text-blue-400 hover:underline" target="_blank" rel="noopener noreferrer">F4NTOM41K</a></li>
+                <li><a href="https://github.com/Withotic" className="text-blue-400 hover:underline" target="_blank" rel="noopener noreferrer">Withotic</a></li>
+              </ul>
             </div>
           </div>
         );
@@ -231,10 +287,31 @@ export default function Home() {
         return <SystemInfo />;
       default:
         return (
-          <div className="bg-gray-900/60 rounded-2xl p-6 text-white">
-            <h2 className="text-2xl mb-4">Фронтенд: Паршин Никита</h2>
-            <h2 className="text-2xl mb-4">Бэкэнд: Лысов Илья</h2>
-            <h2 className="text-2xl">Документация: Лебедев Евгений</h2>
+          <div className="bg-gray-800/70 rounded-2xl p-6 text-white">
+            <h2 className="text-2xl mb-4">Добро пожаловать в игру "Морской Бой"</h2>
+            <p className="mb-4">
+              Классическая игра "Морской Бой" в современном исполнении. Играйте против компьютера или сразитесь с другими игроками онлайн.
+            </p>
+            <p className="mb-4">
+              Управляйте флотом, стратегически размещайте корабли и уничтожайте вражеские суда. Победит тот, кто первым потопит весь флот противника!
+            </p>
+            <div className="grid grid-cols-2 gap-4 mt-6">
+              <button
+                onClick={() => setActiveScreen('singleplayer')}
+                className="p-4 bg-blue-500 rounded-lg hover:bg-blue-600 transition"
+              >
+                Одиночная игра
+              </button>
+              <button
+                onClick={() => {
+                  setActiveScreen('multiPlayer');
+                  setLobbyView('list');
+                }}
+                className="p-4 bg-green-500 rounded-lg hover:bg-green-600 transition"
+              >
+                Многопользовательская игра
+              </button>
+            </div>
           </div>
         );
     }
@@ -289,19 +366,20 @@ export default function Home() {
             {/* Меню слева */}
             <div className="bg-gray-900/80 rounded-2xl p-4 space-y-2 w-64 flex-shrink-0">
               <button 
-                onClick={() => setActiveScreen('singleplayer')}
+                onClick={() => {
+                  setActiveScreen('singleplayer');
+                }}
                 className={`w-full text-white py-2 px-4 rounded-lg hover:bg-gray-700 transition ${activeScreen === 'singleplayer' ? 'bg-gray-700' : ''}`}>
                 Одиночная игра
               </button>
               <button 
-                onClick={() => setActiveScreen('createRoom')}
-                className={`w-full text-white py-2 px-4 rounded-lg hover:bg-gray-700 transition ${activeScreen === 'createRoom' ? 'bg-gray-700' : ''}`}>
-                Создать комнату
-              </button>
-              <button 
-                onClick={() => setActiveScreen('join')}
-                className={`w-full text-white py-2 px-4 rounded-lg hover:bg-gray-700 transition ${activeScreen === 'join' ? 'bg-gray-700' : ''}`}>
-                Подключиться
+                onClick={() => {
+                  setActiveScreen('multiPlayer');
+                  setLobbyView('list');
+                  setInGame(false);
+                }}
+                className={`w-full text-white py-2 px-4 rounded-lg hover:bg-gray-700 transition ${activeScreen === 'multiPlayer' ? 'bg-gray-700' : ''}`}>
+                Многопользовательская игра
               </button>
               <button 
                 onClick={() => setActiveScreen('profile')}
@@ -337,7 +415,7 @@ export default function Home() {
           </div>
         </div>
       </div>
-
+      
       {/* Модальное окно настроек */}
       {showSettings && (
         <Settings
