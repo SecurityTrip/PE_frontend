@@ -88,13 +88,93 @@ export const ShipPlacement = ({ gameId, onReady }: ShipPlacementProps) => {
         return;
       }
 
+      // Сначала отправляем размещение кораблей
+      const shipList = [];
+      
+      for (let i = 0; i < 10; i++) {
+        for (let j = 0; j < 10; j++) {
+          if (board[i][j] === 1) {
+            // Найти корабль, который содержит эту клетку
+            const shipSize = findShipSize(i, j);
+            const orientation = findShipOrientation(i, j, shipSize);
+            
+            // Проверяем, что это начало корабля
+            const isShipStart = 
+              (orientation === 'horizontal' && (j === 0 || board[i][j-1] !== 1)) ||
+              (orientation === 'vertical' && (i === 0 || board[i-1][j] !== 1));
+            
+            if (isShipStart) {
+              shipList.push({
+                x: j,
+                y: i,
+                size: shipSize,
+                isHorizontal: orientation === 'horizontal'
+              });
+            }
+          }
+        }
+      }
+      
+      // Отправляем корабли на сервер
+      console.log('Отправка кораблей на сервер...');
+      await gameService.placeShips(gameId, shipList);
+      
+      // Устанавливаем готовность
       setIsReady(true);
-      await gameService.setReady(gameId);
-      onReady();
+      console.log('Отправка готовности...');
+      const gameData = await gameService.setReady(gameId);
+      console.log('Получен ответ от сервера:', gameData);
+      
+      // Проверяем, готовы ли все игроки
+      const allPlayersReady = gameData.boards?.every((board: any) => board.ready) || false;
+      console.log('Все игроки готовы:', allPlayersReady);
+      
+      // Если все готовы, переходим к игре
+      if (allPlayersReady && gameData.status === 'IN_PROGRESS') {
+        console.log('Переход к игре...');
+        onReady();
+      } else {
+        console.log('Ожидание готовности других игроков...');
+      }
     } catch (error) {
       setError('Ошибка при отправке готовности');
       console.error('Error setting ready:', error);
     }
+  };
+  
+  // Найти размер корабля, содержащего клетку
+  const findShipSize = (row: number, col: number): number => {
+    let size = 1;
+    
+    // Проверяем горизонтально
+    let j = col + 1;
+    while (j < 10 && board[row][j] === 1) {
+      size++;
+      j++;
+    }
+    
+    // Если горизонтально размер 1, проверяем вертикально
+    if (size === 1) {
+      let i = row + 1;
+      while (i < 10 && board[i][col] === 1) {
+        size++;
+        i++;
+      }
+    }
+    
+    return size;
+  };
+  
+  // Определить ориентацию корабля
+  const findShipOrientation = (row: number, col: number, size: number): 'horizontal' | 'vertical' => {
+    if (size === 1) return 'horizontal'; // Для одиночных кораблей ориентация не важна
+    
+    // Проверяем горизонтально
+    if (col + 1 < 10 && board[row][col + 1] === 1) {
+      return 'horizontal';
+    }
+    
+    return 'vertical';
   };
 
   // Очистка доски

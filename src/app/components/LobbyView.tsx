@@ -1,9 +1,11 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { lobbyService, Lobby } from '../services/lobbyService';
+import { useRouter } from 'next/navigation';
+import { lobbyService, Lobby, LobbyError } from '../services/lobbyService';
 import { authService } from '../services/authService';
 import { ShipPlacement } from './ShipPlacement';
+import { sseService } from '../services/sseService';
 
 interface LobbyViewProps {
   lobbyId: string;
@@ -16,12 +18,12 @@ export const LobbyView = ({ lobbyId, onStartGame, onLeaveLobby }: LobbyViewProps
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
-  const [loadAttempt, setLoadAttempt] = useState(0);
   const [refreshing, setRefreshing] = useState(false);
   const [gameStarted, setGameStarted] = useState(false);
   const [gameId, setGameId] = useState<string | null>(null);
   const currentUser = authService.getUser();
   const isOwner = currentUser && lobby?.ownerUsername === currentUser.username;
+  const router = useRouter();
 
   // Загрузка информации о лобби
   const loadLobby = useCallback(async () => {
@@ -33,14 +35,22 @@ export const LobbyView = ({ lobbyId, onStartGame, onLeaveLobby }: LobbyViewProps
     try {
       const result = await lobbyService.getLobbyById(lobbyId);
       
-      if ('message' in result) {
+      if (typeof result === 'object' && 'message' in result) {
         setError(result.message);
       } else {
+        console.log('Получено обновление лобби:', result);
+        console.log('Текущее состояние:', {
+          gameStarted,
+          gameId,
+          status: result.status,
+          resultGameId: result.gameId
+        });
         setLobby(result);
         setError(null);
         
         // Если игра началась, переходим к расстановке кораблей
-        if (result.status === 'IN_GAME' && !gameStarted) {
+        if (result.status === 'IN_GAME' && !gameStarted && result.gameId) {
+          console.log('Игра началась, переходим к расстановке кораблей');
           setGameStarted(true);
           setGameId(result.gameId);
         }
@@ -51,30 +61,77 @@ export const LobbyView = ({ lobbyId, onStartGame, onLeaveLobby }: LobbyViewProps
     } finally {
       setRefreshing(false);
     }
-  }, [lobbyId, refreshing, gameStarted]);
+  }, [lobbyId, refreshing, gameStarted, gameId]);
 
-  // Загрузка данных при монтировании или принудительном обновлении
+  // Загрузка данных лобби при монтировании и при изменении ID
   useEffect(() => {
-    loadLobby();
-    
-    const interval = setInterval(() => {
+    // Загрузка данных при первом рендере компонента
+    if (lobbyId) {
       loadLobby();
-    }, 1000);
-    
-    return () => clearInterval(interval);
-  }, [lobbyId, loadLobby]);
+      
+      // Использование SSE для обновления статуса лобби в реальном времени
+      const closeConnection = sseService.connectToLobbyDetails(
+        lobbyId,
+        // Обработчик обновления данных лобби
+        (updatedLobby) => {
+          // Проверяем, что данные не являются ошибкой
+          if ('message' in updatedLobby) {
+            // Если бэкенд вернул ошибку
+            setError(updatedLobby.message);
+            setIsLoading(false);
+            return;
+          }
+          
+          setLobby(updatedLobby);
+          setError(null);
+          setIsLoading(false);
+          
+          // Проверка на переход в игру
+          if (updatedLobby.gameStarted && updatedLobby.gameId) {
+            router.push(`/game/${updatedLobby.gameId}/placement`);
+          }
+        },
+        // Обработчик ошибок
+        (error) => {
+          console.error('Ошибка SSE для лобби:', error);
+          // В случае ошибки SSE, пробуем загрузить данные обычным способом
+          loadLobby();
+        }
+      );
+      
+      // Закрываем SSE соединение при размонтировании компонента
+      return () => {
+        closeConnection();
+      };
+    }
+  }, [lobbyId, loadLobby, router]);
 
   // Автоматический переход в игру, когда статус меняется на IN_GAME
   useEffect(() => {
-    if (lobby && lobby.status === 'IN_GAME' && !isOwner && !gameStarted) {
+    console.log('Проверка перехода к игре:', {
+      lobbyStatus: lobby?.status,
+      gameStarted,
+      gameId,
+      lobbyGameId: lobby?.gameId
+    });
+    
+    if (lobby && lobby.status === 'IN_GAME' && !gameStarted && lobby.gameId) {
+      console.log('Статус лобби изменился на IN_GAME, переходим к расстановке кораблей');
       setGameStarted(true);
       setGameId(lobby.gameId);
+      
+      // Используем router.push вместо navigate
+      if (lobby.gameId) {
+        router.push(`/game/${lobby.gameId}/placement`);
+      }
     }
-  }, [lobby, isOwner, gameStarted]);
+  }, [lobby, gameStarted, router]);
 
   // Обновить вручную
   const handleRefresh = () => {
-    setLoadAttempt(prev => prev + 1);
+    if (!refreshing) {
+      loadLobby();
+    }
   };
 
   // Обработка выхода из лобби
@@ -102,11 +159,15 @@ export const LobbyView = ({ lobbyId, onStartGame, onLeaveLobby }: LobbyViewProps
       setIsLoading(true);
       const result = await lobbyService.startGame(lobbyId);
       
-      if (!('message' in result)) {
+      if (typeof result === 'object' && 'message' in result) {
+        setError(result.message);
+      } else if (result.gameId) {
+        console.log('Игра успешно начата:', result);
         setGameStarted(true);
         setGameId(result.gameId);
-      } else {
-        setError(result.message);
+        
+        // Переходим на страницу расстановки кораблей
+        router.push(`/game/${result.gameId}/placement`);
       }
     } catch (error) {
       setError('Ошибка при запуске игры');
@@ -166,8 +227,9 @@ export const LobbyView = ({ lobbyId, onStartGame, onLeaveLobby }: LobbyViewProps
       <ShipPlacement
         gameId={gameId}
         onReady={() => {
-          // Здесь будет переход к игровому полю
-          console.log('Игрок готов');
+          // Переход к игровому полю
+          console.log('Игрок готов, переходим к игре');
+          onStartGame();
         }}
       />
     );
@@ -182,15 +244,20 @@ export const LobbyView = ({ lobbyId, onStartGame, onLeaveLobby }: LobbyViewProps
         <div className="flex gap-2">
           <button 
             onClick={handleRefresh}
-            className="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded-lg transition flex items-center text-sm"
+            className={`px-3 py-1 rounded-lg transition flex items-center text-sm ${
+              refreshing 
+                ? 'bg-blue-600 text-opacity-80 cursor-wait' 
+                : 'bg-blue-500 hover:bg-blue-600 text-white'
+            }`}
             disabled={refreshing}
+            aria-label="Обновить информацию о лобби"
           >
-            {refreshing ? (
-              <>
-                <div className="animate-spin rounded-full h-3 w-3 border-t-2 border-b-2 border-white mr-1"></div>
-                Обновление...
-              </>
-            ) : '🔄 Обновить'}
+            <div className={`mr-1.5 flex items-center justify-center ${refreshing ? 'animate-spin' : ''}`}>
+              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2"/>
+              </svg>
+            </div>
+            {refreshing ? 'Обновление...' : 'Обновить'}
           </button>
           <div className="text-sm text-gray-400">
             {lobby.isPrivate ? 'Приватное лобби' : 'Публичное лобби'} • 

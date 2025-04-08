@@ -38,24 +38,28 @@ export const authService = {
         return { message: errorText || 'Ошибка авторизации' };
       }
       
-      // Бэкенд возвращает токен как строку, а не как JSON
-      const token = await response.text();
+      // Получаем данные из ответа
+      const data = await response.json();
+      const { token, id } = data;
       
       // Если token пустой или некорректный, возвращаем ошибку
       if (!token || token.trim() === '') {
         return { message: 'Получен пустой токен' };
       }
       
-      // Создаем объект пользователя
+      // Создаем объект пользователя с правильным id
       const userData: User = {
-        id: username, // Используем username как id
+        id: id.toString(), // Преобразуем id в строку
         username: username,
         avatar: 0, // Дефолтный аватар
       };
       
-      // Сохраняем в localStorage
+      // Сохраняем в localStorage и куки
       localStorage.setItem(TOKEN_KEY, token);
       localStorage.setItem(USER_KEY, JSON.stringify(userData));
+      
+      // Сохраняем токен в куки для SSE
+      authService.saveTokenInCookie(token);
       
       return token;
     } catch (error) {
@@ -76,24 +80,46 @@ export const authService = {
       });
       
       if (!response.ok) {
-        // Обрабатываем ошибку из бэкенда
         const errorText = await response.text();
         return { message: errorText || 'Ошибка регистрации' };
       }
       
-      // Бэкенд возвращает просто строку, а не JSON
-      const result = await response.text();
+      // Получаем данные из ответа
+      const data = await response.json();
+      const { token, id } = data;
       
-      // Проверка валидности результата регистрации
-      if (!result || result.trim() === '') {
-        return { message: 'Регистрация не выполнена' };
+      // Если token пустой или некорректный, возвращаем ошибку
+      if (!token || token.trim() === '') {
+        return { message: 'Получен пустой токен' };
       }
       
-      return result;
+      // Создаем объект пользователя с правильным id
+      const userData: User = {
+        id: id.toString(), // Преобразуем id в строку
+        username: username,
+        avatar: avatar,
+      };
+      
+      // Сохраняем в localStorage и куки
+      localStorage.setItem(TOKEN_KEY, token);
+      localStorage.setItem(USER_KEY, JSON.stringify(userData));
+      
+      // Сохраняем токен в куки для SSE
+      authService.saveTokenInCookie(token);
+      
+      return token;
     } catch (error) {
-      console.error('Register error:', error);
+      console.error('Registration error:', error);
       return { message: error instanceof Error ? error.message : 'Ошибка регистрации' };
     }
+  },
+  
+  // Сохранение токена в куки
+  saveTokenInCookie: (token: string): void => {
+    const secureFlag = window.location.protocol === 'https:' ? '; secure' : '';
+    const cookieValue = `auth_token=${token}; path=/; max-age=3600${secureFlag}; SameSite=Strict`;
+    document.cookie = cookieValue;
+    console.log('Токен сохранен в куки для SSE соединений');
   },
   
   // Обновление токена
@@ -117,11 +143,13 @@ export const authService = {
         return { message: errorText || 'Ошибка обновления токена' };
       }
       
-      // Бэкенд возвращает новый токен как строку
-      const newToken = await response.text();
+      // Получаем данные из ответа
+      const data = await response.json();
+      const newToken = data.token;
       
-      // Обновляем токен в localStorage
+      // Обновляем токен в localStorage и куки
       localStorage.setItem(TOKEN_KEY, newToken);
+      authService.saveTokenInCookie(newToken);
       
       return newToken;
     } catch (error) {
@@ -134,6 +162,9 @@ export const authService = {
   logout: (): void => {
     localStorage.removeItem(TOKEN_KEY);
     localStorage.removeItem(USER_KEY);
+    
+    // Удаляем куки
+    document.cookie = 'auth_token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
   },
   
   // Получение токена

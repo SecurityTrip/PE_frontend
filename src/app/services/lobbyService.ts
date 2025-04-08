@@ -282,4 +282,10 @@ export const lobbyService = {
       return { message: error instanceof Error ? error.message : 'Ошибка получения списка ваших лобби' };
     }
   },
+  
+  // Получение всех лобби (для удобства использования в компонентах)
+  getLobbies: async (): Promise<Lobby[] | LobbyError> => {
+    // Возвращаем публичные лобби по умолчанию
+    return lobbyService.getPublicLobbies();
+  },
 }; 
