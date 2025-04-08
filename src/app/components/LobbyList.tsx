@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { lobbyService, Lobby, LobbyError } from '../services/lobbyService';
 
 interface LobbyListProps {
@@ -10,49 +10,57 @@ interface LobbyListProps {
 
 export const LobbyList = ({ onJoinLobby, onCreateLobby }: LobbyListProps) => {
   const [lobbies, setLobbies] = useState<Lobby[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<'public' | 'my'>('public');
   const [joinLobbyId, setJoinLobbyId] = useState('');
   const [password, setPassword] = useState('');
   const [showPasswordModal, setShowPasswordModal] = useState(false);
   const [selectedLobby, setSelectedLobby] = useState<Lobby | null>(null);
+  const [loadAttempt, setLoadAttempt] = useState(0);
+  const [refreshing, setRefreshing] = useState(false);
 
   // Загрузка списка лобби
-  const loadLobbies = async () => {
-    setIsLoading(true);
+  const loadLobbies = useCallback(async () => {
+    if (refreshing) return;
+    
+    setRefreshing(true);
     setError(null);
-
+    
     try {
       const result = activeTab === 'public' 
         ? await lobbyService.getPublicLobbies()
         : await lobbyService.getMyLobbies();
-
+      
       if ('message' in result) {
         setError(result.message);
-        setLobbies([]);
       } else {
         setLobbies(result);
+        setError(null);
       }
     } catch (error) {
       setError('Ошибка загрузки списка лобби');
       console.error('Error loading lobbies:', error);
     } finally {
-      setIsLoading(false);
+      setRefreshing(false);
     }
-  };
+  }, [refreshing, activeTab]);
 
-  // Загрузка при монтировании и изменении таба
+  // Загрузка данных при монтировании
   useEffect(() => {
     loadLobbies();
     
-    // Периодическое обновление списка лобби каждые 5 секунд
     const interval = setInterval(() => {
       loadLobbies();
-    }, 5000);
+    }, 3000);
     
     return () => clearInterval(interval);
-  }, [activeTab]);
+  }, [loadLobbies]);
+
+  // Обновить вручную
+  const handleRefresh = () => {
+    loadLobbies();
+  };
 
   // Обработчик прямого присоединения к лобби
   const handleJoinLobby = async (lobby: Lobby) => {
@@ -65,6 +73,7 @@ export const LobbyList = ({ onJoinLobby, onCreateLobby }: LobbyListProps) => {
     
     // Иначе присоединяемся напрямую
     try {
+      setIsLoading(true);
       const result = await lobbyService.joinLobby({
         lobbyID: lobby.lobbyID,
       });
@@ -72,11 +81,14 @@ export const LobbyList = ({ onJoinLobby, onCreateLobby }: LobbyListProps) => {
       if ('message' in result) {
         setError(result.message);
       } else {
+        setError(null);
         onJoinLobby(lobby.lobbyID);
       }
     } catch (error) {
       setError('Ошибка при присоединении к лобби');
       console.error('Error joining lobby:', error);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -88,6 +100,8 @@ export const LobbyList = ({ onJoinLobby, onCreateLobby }: LobbyListProps) => {
     }
     
     try {
+      setIsLoading(true);
+      
       // Сначала получаем информацию о лобби
       const lobbyInfo = await lobbyService.getLobbyById(joinLobbyId);
       
@@ -111,11 +125,14 @@ export const LobbyList = ({ onJoinLobby, onCreateLobby }: LobbyListProps) => {
       if ('message' in result) {
         setError(result.message);
       } else {
+        setError(null);
         onJoinLobby(joinLobbyId);
       }
     } catch (error) {
       setError('Ошибка при присоединении к лобби');
       console.error('Error joining lobby by ID:', error);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -124,6 +141,8 @@ export const LobbyList = ({ onJoinLobby, onCreateLobby }: LobbyListProps) => {
     if (!selectedLobby) return;
     
     try {
+      setIsLoading(true);
+      
       const result = await lobbyService.joinLobby({
         lobbyID: selectedLobby.lobbyID,
         password,
@@ -135,24 +154,82 @@ export const LobbyList = ({ onJoinLobby, onCreateLobby }: LobbyListProps) => {
         setShowPasswordModal(false);
         setPassword('');
         setSelectedLobby(null);
+        setError(null);
         onJoinLobby(selectedLobby.lobbyID);
       }
     } catch (error) {
       setError('Ошибка при присоединении к лобби');
       console.error('Error joining lobby with password:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Обработчик выхода из лобби
+  const handleLeaveLobby = async (lobbyId: string) => {
+    try {
+      setIsLoading(true);
+      
+      const result = await lobbyService.leaveLobby(lobbyId);
+      
+      if (result === true) {
+        // Обновляем список лобби после успешного выхода
+        handleRefresh();
+      } else if (typeof result === 'object' && 'message' in result) {
+        setError(result.message);
+      }
+    } catch (error) {
+      setError('Ошибка при выходе из лобби');
+      console.error('Error leaving lobby:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Обработчик запуска игры
+  const handleStartGame = async (lobbyId: string) => {
+    try {
+      setIsLoading(true);
+      
+      const result = await lobbyService.startGame(lobbyId);
+      
+      if ('message' in result) {
+        setError(result.message);
+      } else {
+        handleRefresh();
+      }
+    } catch (error) {
+      setError('Ошибка при запуске игры');
+      console.error('Error starting game:', error);
+    } finally {
+      setIsLoading(false);
     }
   };
 
   return (
-    <div className="bg-gray-900/60 rounded-2xl p-6 text-white w-full">
+    <div className="bg-gray-800/70 rounded-2xl p-6 text-white w-full">
       <div className="flex justify-between mb-6">
         <h2 className="text-2xl font-bold">Список лобби</h2>
-        <button 
-          onClick={onCreateLobby}
-          className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg transition"
-        >
-          Создать лобби
-        </button>
+        <div className="flex gap-2">
+          <button 
+            onClick={handleRefresh}
+            className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg transition flex items-center"
+            disabled={refreshing}
+          >
+            {refreshing ? (
+              <>
+                <div className="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-white mr-2"></div>
+                Обновление...
+              </>
+            ) : '🔄 Обновить'}
+          </button>
+          <button 
+            onClick={onCreateLobby}
+            className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg transition"
+          >
+            Создать лобби
+          </button>
+        </div>
       </div>
       
       {/* Вкладки */}
@@ -178,11 +255,13 @@ export const LobbyList = ({ onJoinLobby, onCreateLobby }: LobbyListProps) => {
           placeholder="Введите ID лобби для присоединения"
           value={joinLobbyId}
           onChange={(e) => setJoinLobbyId(e.target.value)}
-          className="flex-1 bg-gray-800 border border-gray-700 rounded-lg px-4 py-2"
+          className="flex-1 bg-gray-700 border border-gray-600 rounded-lg px-4 py-2"
+          disabled={isLoading}
         />
         <button
           onClick={handleJoinById}
           className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg transition"
+          disabled={isLoading || !joinLobbyId.trim()}
         >
           Присоединиться
         </button>
@@ -190,13 +269,19 @@ export const LobbyList = ({ onJoinLobby, onCreateLobby }: LobbyListProps) => {
       
       {/* Сообщение об ошибке */}
       {error && (
-        <div className="mb-4 p-3 bg-red-500/20 border border-red-500 rounded-lg text-red-200">
-          {error}
+        <div className="mb-4 p-3 bg-red-500/20 border border-red-500 rounded-lg text-red-200 flex justify-between items-center">
+          <span>{error}</span>
+          <button 
+            onClick={() => setError(null)} 
+            className="text-red-300 hover:text-white"
+          >
+            ✕
+          </button>
         </div>
       )}
       
       {/* Список лобби */}
-      {isLoading ? (
+      {isLoading && lobbies.length === 0 ? (
         <div className="flex justify-center py-8">
           <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
         </div>
@@ -207,7 +292,7 @@ export const LobbyList = ({ onJoinLobby, onCreateLobby }: LobbyListProps) => {
       ) : (
         <div className="grid gap-4">
           {lobbies.map((lobby) => (
-            <div key={lobby.lobbyID} className="bg-gray-800 rounded-lg p-4 flex justify-between items-center">
+            <div key={lobby.lobbyID} className="bg-gray-700 rounded-lg p-4 flex justify-between items-center">
               <div>
                 <h3 className="text-lg font-medium">{lobby.lobbyName}</h3>
                 <div className="text-sm text-gray-400 mt-1">
@@ -215,7 +300,15 @@ export const LobbyList = ({ onJoinLobby, onCreateLobby }: LobbyListProps) => {
                   <span className="mx-2">•</span>
                   <span>Игроки: {lobby.currentPlayers}/{lobby.maxPlayers}</span>
                   <span className="mx-2">•</span>
-                  <span>Статус: {lobby.status}</span>
+                  <span>
+                    Статус: 
+                    <span className={lobby.status === 'WAITING' ? 
+                      'text-yellow-400 ml-1' : 
+                      'text-green-400 ml-1'
+                    }>
+                      {lobby.status === 'WAITING' ? 'Ожидание' : 'В игре'}
+                    </span>
+                  </span>
                   {lobby.isPrivate && (
                     <>
                       <span className="mx-2">•</span>
@@ -223,17 +316,16 @@ export const LobbyList = ({ onJoinLobby, onCreateLobby }: LobbyListProps) => {
                     </>
                   )}
                 </div>
+                <div className="text-xs text-gray-500 mt-1">
+                  ID: {lobby.lobbyID}
+                </div>
               </div>
               <div className="flex gap-2">
                 {activeTab === 'my' && lobby.status === 'WAITING' && lobby.ownerUsername === (typeof window !== 'undefined' ? JSON.parse(localStorage.getItem('battleship_user') || '{}').username : '') && (
                   <button
-                    onClick={async () => {
-                      const result = await lobbyService.startGame(lobby.lobbyID);
-                      if (!('message' in result)) {
-                        loadLobbies();
-                      }
-                    }}
+                    onClick={() => handleStartGame(lobby.lobbyID)}
                     className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg transition"
+                    disabled={isLoading || lobby.currentPlayers < 2}
                   >
                     Начать игру
                   </button>
@@ -242,17 +334,16 @@ export const LobbyList = ({ onJoinLobby, onCreateLobby }: LobbyListProps) => {
                   <button
                     onClick={() => handleJoinLobby(lobby)}
                     className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg transition"
+                    disabled={isLoading}
                   >
                     Присоединиться
                   </button>
                 )}
                 {activeTab === 'my' && (
                   <button
-                    onClick={async () => {
-                      await lobbyService.leaveLobby(lobby.lobbyID);
-                      loadLobbies();
-                    }}
+                    onClick={() => handleLeaveLobby(lobby.lobbyID)}
                     className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg transition"
+                    disabled={isLoading}
                   >
                     Выйти
                   </button>
@@ -276,7 +367,14 @@ export const LobbyList = ({ onJoinLobby, onCreateLobby }: LobbyListProps) => {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               className="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-2 mb-4"
+              disabled={isLoading}
             />
+            
+            {error && (
+              <div className="mb-4 p-3 bg-red-500/20 border border-red-500 rounded-lg text-red-200">
+                {error}
+              </div>
+            )}
             
             <div className="flex justify-end gap-3">
               <button
@@ -284,16 +382,24 @@ export const LobbyList = ({ onJoinLobby, onCreateLobby }: LobbyListProps) => {
                   setShowPasswordModal(false);
                   setPassword('');
                   setSelectedLobby(null);
+                  setError(null);
                 }}
                 className="px-4 py-2 border border-gray-600 rounded-lg hover:bg-gray-700 transition"
+                disabled={isLoading}
               >
                 Отмена
               </button>
               <button
                 onClick={handleConfirmPassword}
-                className="px-4 py-2 bg-blue-500 rounded-lg hover:bg-blue-600 transition"
+                className="px-4 py-2 bg-blue-500 rounded-lg hover:bg-blue-600 transition flex items-center"
+                disabled={isLoading || !password.trim()}
               >
-                Подтвердить
+                {isLoading ? (
+                  <>
+                    <div className="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-white mr-2"></div>
+                    Подключение...
+                  </>
+                ) : 'Подтвердить'}
               </button>
             </div>
           </div>
