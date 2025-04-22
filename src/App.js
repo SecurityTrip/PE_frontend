@@ -74,7 +74,7 @@ function Regis() {
                 <input type="text" placeholder="Пароль" className="reginputpass" />
                 <input type="text" placeholder="Повторите пароль" className="reginputpasspass" />
                 <button onClick={handleClick} className="regbutton">Зарегистрироваться</button>
-                <div className="avatarLabel">Выберите аватар:</div>
+                <div style={{position: 'absolute',color: 'white',left: 'calc(50% + 4vh)',fontSize:'4vh'} }>Выберите аватар:</div>
                 <SelectedAva x={selavx} y={selavy}></SelectedAva>
                 <Avatimbut y='7' x='-2' img={avaimg0} onClick={() => { setSelavx(-3.5); setSelavy(5.5); }} />
                 <Avatimbut y='7' x='8' img={avaimg1} onClick={() => { setSelavx(6.5); setSelavy(5.5); }} />
@@ -307,6 +307,7 @@ function ProfSet() {
             <AssButt y='5' onClick={AbAuth} className="assButt"></AssButt>
             <AssButt y='6' onClick={Syst} className="assButt"></AssButt>
             <div className="menuBigTab">
+                <div style={{ position: 'absolute', top: '10vh',left: '15vh',fontSize:'6vh'} }>Аватар:</div>
                 <SelectedAva x={selavx} y={selavy}></SelectedAva>
                 <Avatimbut y='7' x='-2' img={avaimg0} onClick={() => { setSelavx(-3.5); setSelavy(5.5); }} />
                 <Avatimbut y='7' x='8' img={avaimg1} onClick={() => { setSelavx(6.5); setSelavy(5.5); }} />
