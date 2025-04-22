@@ -284,3 +284,63 @@
     margin-bottom: 0;
     font-size:3vh;
 }
+
+
+
+.menuTab {
+    position: absolute;
+    top: 54vh;
+    left: calc(50% - 50vh);
+    width: 45vh;
+    height: 52vh;
+    padding-top: 2vh;
+    transform: translate(-50%, -50%);
+    background-color: rgb(0,0,0,0.69);
+    border-radius: 5vh;
+    font-size: 4vh;
+    line-height: 7vh;
+    font-weight: bold;
+    box-shadow: 0px 10px 10px 0px rgb(0,0,0,0.3);
+}
+.selectedMenu {
+    position: absolute;
+    left: calc(50% - 70vh);
+    width: 40vh;
+    height: 7vh;
+    padding: 0px 0vh;
+    margin-top: 0;
+    margin-bottom: 0;
+    border-radius: 4vh;
+    background-color: rgb(255,255,255,0.5);
+}
+.menuBigTab {
+    position: absolute;
+    top: 54vh;
+    left: calc(50% + 30vh);
+    width: 100vh;
+    height: 65vh;
+    padding-top: 2vh;
+    transform: translate(-50%, -50%);
+    background-color: rgb(0,0,0,0.69);
+    border-radius: 5vh;
+    font-size: 4vh;
+    line-height: 7vh;
+    font-weight: bold;
+    box-shadow: 0px 10px 10px 0px rgb(0,0,0,0.3);
+}
+.assButt {
+    position: absolute;
+    
+    left: calc(50% - 70vh);
+    width: 40vh;
+    height: 7vh;
+    padding: 0px 2vh;
+    margin-top: 0;
+    margin-bottom: 0;
+    transform: translate(0, -50%);
+    border: none;
+    font-size: 2vh;
+    font-weight: bold;
+    color: rgb(255,255,255);
+    background-color: rgba(255,255,255,0);
+}
