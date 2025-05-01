@@ -113,314 +113,59 @@ function AssButt({ y , onClick }) {
     );
 }
 function Singleplayer() {
-    const navigate = useNavigate();
-    function Single() {
-        navigate('/singleplayer'); // Навигация на другую страницу
-    }
-    function CrRoom() {
-        navigate('/createroom'); // Навигация на другую страницу
-    }
-    function Conn() {
-        navigate('/connect'); // Навигация на другую страницу
-    }
-    function ProfSt() {
-        navigate('/profset'); // Навигация на другую страницу
-    }
-    function Ruls() {
-        navigate('/rules'); // Навигация на другую страницу
-    }
-    function AbAuth() {
-        navigate('/about'); // Навигация на другую страницу
-    }
-    function Syst() {
-        navigate('/system'); // Навигация на другую страницу
-    }
     return (
-        <header className="App-header">
-            <div className="bckgr"></div>
-            <img className="logolabel" src={logolabelimg} alt="Logo" />
-            <img className="logoimg" src={logoimgimg} alt="Logo" />
-            <div className="menuTab">
-                Одиночная игра<br />
-                Создать комнату<br />
-                Подключиться<br />
-                Настроить профиль<br />
-                Правила игры<br />
-                Об авторах<br />
-                О системе<br />
-            </div>
-            <SelectedMenu y='0'></SelectedMenu>
-            <AssButt y='0' onClick={Single} className="assButt"></AssButt>
-            <AssButt y='1' onClick={CrRoom} className="assButt"></AssButt>
-            <AssButt y='2' onClick={Conn} className="assButt"></AssButt>
-            <AssButt y='3' onClick={ProfSt} className="assButt"></AssButt>
-            <AssButt y='4' onClick={Ruls} className="assButt"></AssButt>
-            <AssButt y='5' onClick={AbAuth} className="assButt"></AssButt>
-            <AssButt y='6' onClick={Syst} className="assButt"></AssButt>
-            <div className="menuBigTab"></div>
-        </header>
+        <MenuComponent selctdMenu='0'></MenuComponent>
     );
 }
 function CreateRoom() {
-    const navigate = useNavigate();
-    function Single() {
-        navigate('/singleplayer'); // Навигация на другую страницу
-    }
-    function CrRoom() {
-        navigate('/createroom'); // Навигация на другую страницу
-    }
-    function Conn() {
-        navigate('/connect'); // Навигация на другую страницу
-    }
-    function ProfSt() {
-        navigate('/profset'); // Навигация на другую страницу
-    }
-    function Ruls() {
-        navigate('/rules'); // Навигация на другую страницу
-    }
-    function AbAuth() {
-        navigate('/about'); // Навигация на другую страницу
-    }
-    function Syst() {
-        navigate('/system'); // Навигация на другую страницу
-    }
     return (
-        <header className="App-header">
-            <div className="bckgr"></div>
-            <img className="logolabel" src={logolabelimg} alt="Logo" />
-            <img className="logoimg" src={logoimgimg} alt="Logo" />
-            <div className="menuTab">
-                Одиночная игра<br />
-                Создать комнату<br />
-                Подключиться<br />
-                Настроить профиль<br />
-                Правила игры<br />
-                Об авторах<br />
-                О системе<br />
-            </div>
-            <SelectedMenu y='1'></SelectedMenu>
-            <AssButt y='0' onClick={Single} className="assButt"></AssButt>
-            <AssButt y='1' onClick={CrRoom} className="assButt"></AssButt>
-            <AssButt y='2' onClick={Conn} className="assButt"></AssButt>
-            <AssButt y='3' onClick={ProfSt} className="assButt"></AssButt>
-            <AssButt y='4' onClick={Ruls} className="assButt"></AssButt>
-            <AssButt y='5' onClick={AbAuth} className="assButt"></AssButt>
-            <AssButt y='6' onClick={Syst} className="assButt"></AssButt>
-            <div className="menuBigTab"></div>
-        </header>
+        <MenuComponent selctdMenu='1'></MenuComponent>
     );
 }
 function Connect() {
-    const navigate = useNavigate();
-    function Single() {
-        navigate('/singleplayer'); // Навигация на другую страницу
-    }
-    function CrRoom() {
-        navigate('/createroom'); // Навигация на другую страницу
-    }
-    function Conn() {
-        navigate('/connect'); // Навигация на другую страницу
-    }
-    function ProfSt() {
-        navigate('/profset'); // Навигация на другую страницу
-    }
-    function Ruls() {
-        navigate('/rules'); // Навигация на другую страницу
-    }
-    function AbAuth() {
-        navigate('/about'); // Навигация на другую страницу
-    }
-    function Syst() {
-        navigate('/system'); // Навигация на другую страницу
-    }
+    
     return (
-        <header className="App-header">
-            <div className="bckgr"></div>
-            <img className="logolabel" src={logolabelimg} alt="Logo" />
-            <img className="logoimg" src={logoimgimg} alt="Logo" />
-            <div className="menuTab">
-                Одиночная игра<br />
-                Создать комнату<br />
-                Подключиться<br />
-                Настроить профиль<br />
-                Правила игры<br />
-                Об авторах<br />
-                О системе<br />
-            </div>
-            <SelectedMenu y='2'></SelectedMenu>
-            <AssButt y='0' onClick={Single} className="assButt"></AssButt>
-            <AssButt y='1' onClick={CrRoom} className="assButt"></AssButt>
-            <AssButt y='2' onClick={Conn} className="assButt"></AssButt>
-            <AssButt y='3' onClick={ProfSt} className="assButt"></AssButt>
-            <AssButt y='4' onClick={Ruls} className="assButt"></AssButt>
-            <AssButt y='5' onClick={AbAuth} className="assButt"></AssButt>
-            <AssButt y='6' onClick={Syst} className="assButt"></AssButt>
-            <div className="menuBigTab"></div>
-        </header>
+        <MenuComponent selctdMenu='2'></MenuComponent>
     );
 }
 function ProfSet() {
-    const navigate = useNavigate();
     const [selavx, setSelavx] = useState(-3.5);
     const [selavy, setSelavy] = useState(5.5);
-    function Single() {
-        navigate('/singleplayer'); // Навигация на другую страницу
-    }
-    function CrRoom() {
-        navigate('/createroom'); // Навигация на другую страницу
-    }
-    function Conn() {
-        navigate('/connect'); // Навигация на другую страницу
-    }
-    function ProfSt() {
-        navigate('/profset'); // Навигация на другую страницу
-    }
-    function Ruls() {
-        navigate('/rules'); // Навигация на другую страницу
-    }
-    function AbAuth() {
-        navigate('/about'); // Навигация на другую страницу
-    }
-    function Syst() {
-        navigate('/system'); // Навигация на другую страницу
-    }
+    
     return (
-        <header className="App-header">
-            <div className="bckgr"></div>
-            <img className="logolabel" src={logolabelimg} alt="Logo" />
-            <img className="logoimg" src={logoimgimg} alt="Logo" />
-            <div className="menuTab">
-                Одиночная игра<br />
-                Создать комнату<br />
-                Подключиться<br />
-                Настроить профиль<br />
-                Правила игры<br />
-                Об авторах<br />
-                О системе<br />
-            </div>
-            <SelectedMenu y='3'></SelectedMenu>
-            <AssButt y='0' onClick={Single} className="assButt"></AssButt>
-            <AssButt y='1' onClick={CrRoom} className="assButt"></AssButt>
-            <AssButt y='2' onClick={Conn} className="assButt"></AssButt>
-            <AssButt y='3' onClick={ProfSt} className="assButt"></AssButt>
-            <AssButt y='4' onClick={Ruls} className="assButt"></AssButt>
-            <AssButt y='5' onClick={AbAuth} className="assButt"></AssButt>
-            <AssButt y='6' onClick={Syst} className="assButt"></AssButt>
-            <div className="menuBigTab">
-                <div style={{ position: 'absolute', top: '10vh',left: '15vh',fontSize:'6vh'} }>Аватар:</div>
-                <SelectedAva x={selavx} y={selavy}></SelectedAva>
-                <Avatimbut y='7' x='-2' img={avaimg0} onClick={() => { setSelavx(-3.5); setSelavy(5.5); }} />
-                <Avatimbut y='7' x='8' img={avaimg1} onClick={() => { setSelavx(6.5); setSelavy(5.5); }} />
-                <Avatimbut y='7' x='18' img={avaimg2} onClick={() => { setSelavx(16.5); setSelavy(5.5); }} />
-                <Avatimbut y='7' x='28' img={avaimg3} onClick={() => { setSelavx(26.5); setSelavy(5.5); }} />
-                <Avatimbut y='7' x='38' img={avaimg4} onClick={() => { setSelavx(36.5); setSelavy(5.5); }} />
-                <Avatimbut y='17' x='-2' img={avaimg5} onClick={() => { setSelavx(-3.5); setSelavy(15.5); }} />
-                <Avatimbut y='17' x='8' img={avaimg6} onClick={() => { setSelavx(6.5); setSelavy(15.5); }} />
-                <Avatimbut y='17' x='18' img={avaimg7} onClick={() => { setSelavx(16.5); setSelavy(15.5); }} />
-                <Avatimbut y='17' x='28' img={avaimg8} onClick={() => { setSelavx(26.5); setSelavy(15.5); }} />
-                <Avatimbut y='17' x='38' img={avaimg9} onClick={() => { setSelavx(36.5); setSelavy(15.5); }} /></div>
-        </header>
+        <MenuComponent selctdMenu='3'>
+            <div style={{ position: 'absolute', top: '10vh', left: '15vh', fontSize: '6vh' }}>Аватар:</div>
+            <SelectedAva x={selavx} y={selavy}></SelectedAva>
+            <Avatimbut y='7' x='-2' img={avaimg0} onClick={() => { setSelavx(-3.5); setSelavy(5.5); }} />
+            <Avatimbut y='7' x='8' img={avaimg1} onClick={() => { setSelavx(6.5); setSelavy(5.5); }} />
+            <Avatimbut y='7' x='18' img={avaimg2} onClick={() => { setSelavx(16.5); setSelavy(5.5); }} />
+            <Avatimbut y='7' x='28' img={avaimg3} onClick={() => { setSelavx(26.5); setSelavy(5.5); }} />
+            <Avatimbut y='7' x='38' img={avaimg4} onClick={() => { setSelavx(36.5); setSelavy(5.5); }} />
+            <Avatimbut y='17' x='-2' img={avaimg5} onClick={() => { setSelavx(-3.5); setSelavy(15.5); }} />
+            <Avatimbut y='17' x='8' img={avaimg6} onClick={() => { setSelavx(6.5); setSelavy(15.5); }} />
+            <Avatimbut y='17' x='18' img={avaimg7} onClick={() => { setSelavx(16.5); setSelavy(15.5); }} />
+            <Avatimbut y='17' x='28' img={avaimg8} onClick={() => { setSelavx(26.5); setSelavy(15.5); }} />
+            <Avatimbut y='17' x='38' img={avaimg9} onClick={() => { setSelavx(36.5); setSelavy(15.5); }} />
+        </MenuComponent>        
     );
 }
 function Rules() {
-    const navigate = useNavigate();
-    function Single() {
-        navigate('/singleplayer'); // Навигация на другую страницу
-    }
-    function CrRoom() {
-        navigate('/createroom'); // Навигация на другую страницу
-    }
-    function Conn() {
-        navigate('/connect'); // Навигация на другую страницу
-    }
-    function ProfSt() {
-        navigate('/profset'); // Навигация на другую страницу
-    }
-    function Ruls() {
-        navigate('/rules'); // Навигация на другую страницу
-    }
-    function AbAuth() {
-        navigate('/about'); // Навигация на другую страницу
-    }
-    function Syst() {
-        navigate('/system'); // Навигация на другую страницу
-    }
+    
     return (
-        <header className="App-header">
-            <div className="bckgr"></div>
-            <img className="logolabel" src={logolabelimg} alt="Logo" />
-            <img className="logoimg" src={logoimgimg} alt="Logo" />
-            <div className="menuTab">
-                Одиночная игра<br />
-                Создать комнату<br />
-                Подключиться<br />
-                Настроить профиль<br />
-                Правила игры<br />
-                Об авторах<br />
-                О системе<br />
-            </div>
-            <SelectedMenu y='4'></SelectedMenu>
-            <AssButt y='0' onClick={Single} className="assButt"></AssButt>
-            <AssButt y='1' onClick={CrRoom} className="assButt"></AssButt>
-            <AssButt y='2' onClick={Conn} className="assButt"></AssButt>
-            <AssButt y='3' onClick={ProfSt} className="assButt"></AssButt>
-            <AssButt y='4' onClick={Ruls} className="assButt"></AssButt>
-            <AssButt y='5' onClick={AbAuth} className="assButt"></AssButt>
-            <AssButt y='6' onClick={Syst} className="assButt"></AssButt>
-            <div className="menuBigTab"></div>
-        </header>
+        <MenuComponent selctdMenu='4'></MenuComponent>
     );
 }
 function About() {
-    const navigate = useNavigate();
-    function Single() {
-        navigate('/singleplayer'); // Навигация на другую страницу
-    }
-    function CrRoom() {
-        navigate('/createroom'); // Навигация на другую страницу
-    }
-    function Conn() {
-        navigate('/connect'); // Навигация на другую страницу
-    }
-    function ProfSt() {
-        navigate('/profset'); // Навигация на другую страницу
-    }
-    function Ruls() {
-        navigate('/rules'); // Навигация на другую страницу
-    }
-    function AbAuth() {
-        navigate('/about'); // Навигация на другую страницу
-    }
-    function Syst() {
-        navigate('/system'); // Навигация на другую страницу
-    }
     return (
-        <header className="App-header">
-            <div className="bckgr"></div>
-            <img className="logolabel" src={logolabelimg} alt="Logo" />
-            <img className="logoimg" src={logoimgimg} alt="Logo" />
-            <div className="menuTab">
-                Одиночная игра<br />
-                Создать комнату<br />
-                Подключиться<br />
-                Настроить профиль<br />
-                Правила игры<br />
-                Об авторах<br />
-                О системе<br />
-            </div>
-            <SelectedMenu y='5'></SelectedMenu>
-            <AssButt y='0' onClick={Single} className="assButt"></AssButt>
-            <AssButt y='1' onClick={CrRoom} className="assButt"></AssButt>
-            <AssButt y='2' onClick={Conn} className="assButt"></AssButt>
-            <AssButt y='3' onClick={ProfSt} className="assButt"></AssButt>
-            <AssButt y='4' onClick={Ruls} className="assButt"></AssButt>
-            <AssButt y='5' onClick={AbAuth} className="assButt"></AssButt>
-            <AssButt y='6' onClick={Syst} className="assButt"></AssButt>
-            <div className="menuBigTab"></div>
-        </header>
+        <MenuComponent selctdMenu='5'></MenuComponent>
     );
 }
 function System() {
+    return (
+        <MenuComponent selctdMenu='6'></MenuComponent>
+    );
+}
+function MenuComponent({ selctdMenu, children }) {
     const navigate = useNavigate();
     function Single() {
         navigate('/singleplayer'); // Навигация на другую страницу
@@ -457,7 +202,7 @@ function System() {
                 Об авторах<br />
                 О системе<br />
             </div>
-            <SelectedMenu y='6'></SelectedMenu>
+            <SelectedMenu y={selctdMenu}></SelectedMenu>
             <AssButt y='0' onClick={Single} className="assButt"></AssButt>
             <AssButt y='1' onClick={CrRoom} className="assButt"></AssButt>
             <AssButt y='2' onClick={Conn} className="assButt"></AssButt>
@@ -465,8 +210,9 @@ function System() {
             <AssButt y='4' onClick={Ruls} className="assButt"></AssButt>
             <AssButt y='5' onClick={AbAuth} className="assButt"></AssButt>
             <AssButt y='6' onClick={Syst} className="assButt"></AssButt>
-            <div className="menuBigTab"></div>
+            <div className="menuBigTab">{children}</div>
         </header>
     );
 }
+
 export default App;
