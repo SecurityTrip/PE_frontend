@@ -27,6 +27,7 @@ function App() {
                     <Route path="/rules" element={<Rules />} />
                     <Route path="/about" element={<About />} />
                     <Route path="/system" element={<System />} />
+                    <Route path="/fieldedit" element={<FieldEdit />} />
                 </Routes>
             </div>
         </Router>
@@ -35,6 +36,8 @@ function App() {
 
 function Auth() {
     const navigate = useNavigate();
+    const [login, setLogin] = useState('');
+    const [pass, setPass] = useState('');
     function handleClick() {
         navigate('/singleplayer'); // Навигация на другую страницу
     }
@@ -42,12 +45,12 @@ function Auth() {
     return (
         <header className="App-header">
             <div className="bckgr"></div>
-            <img className="logolabel" src={logolabelimg} alt="Logo" />
-            <img className="logoimg" src={logoimgimg} alt="Logo" />
+            <img className="logo" src={logoimgimg} alt="Logo" />
+            <img className="logo" src={logolabelimg} alt="Logo" />
             <div className="logintab">Авторизация</div>
             <div className="logintabdark">
-                <input type="text" placeholder="Логин" className="loginputlog" />
-                <input type="text" placeholder="Пароль" className="loginputpass" />
+                <input onChange={(e) => setLogin(e.target.value)} type="text" placeholder="Логин" className="loginput" style={{ top: '11.5vh' } } />
+                <input onChange={(e) => setPass(e.target.value)} type="text" placeholder="Пароль" className="loginput" />
                 <button onClick={handleClick} className="logbutton">Войти</button>
             </div>
             <Link to="/regis" className="linkToReg">Зарегистрироваться</Link>
@@ -58,34 +61,87 @@ function Regis() {
     const navigate = useNavigate();
     const [selavx, setSelavx] = useState(-3.5);
     const [selavy, setSelavy] = useState(5.5);
+    const [iSeld, setISeld] = useState(0);
+
+    const [login, setLogin] = useState('');
+    const [pass, setPass] = useState('');
+    const [passpass, setPassPass] = useState('');
     function handleClick() {
         navigate('/singleplayer'); // Навигация на другую страницу
+    }
+    function avaSelect(i) {
+        setISeld(i);
+        switch (i) {
+            case 0: {
+                setSelavx(-3.5); setSelavy(5.5);
+                break;
+            }
+            case 1: {
+                setSelavx(6.5); setSelavy(5.5);
+                break;
+            }
+            case 2: {
+                setSelavx(16.5); setSelavy(5.5);
+                break;
+            }
+            case 3: {
+                setSelavx(26.5); setSelavy(5.5);
+                break;
+            }
+            case 4: {
+                setSelavx(36.5); setSelavy(5.5);
+                break;
+            }
+            case 5: {
+                setSelavx(-3.5); setSelavy(15.5);
+                break;
+            }
+            case 6: {
+                setSelavx(6.5); setSelavy(15.5);
+                break;
+            }
+            case 7: {
+                setSelavx(16.5); setSelavy(15.5);
+                break;
+            }
+            case 8: {
+                setSelavx(26.5); setSelavy(15.5);
+                break;
+            }
+            case 9: {
+                setSelavx(36.5); setSelavy(15.5);
+                break;
+            }
+            default: {
+                alert('ничего себе');
+            }
+        }
     }
     
     return (
 
         <header>
             <div className="bckgr"></div>
-            <img className="logolabel" src={logolabelimg} alt="Logo" />
-            <img className="logoimg" src={logoimgimg} alt="Logo" />
+            <img className="logo" src={logoimgimg} alt="Logo" />
+            <img className="logo" src={logolabelimg} alt="Logo" />
             <div className="regtab">Регистрация</div>
             <div className="regtabdark">
-                <input type="text" placeholder="Логин" className="reginputlog" />
-                <input type="text" placeholder="Пароль" className="reginputpass" />
-                <input type="text" placeholder="Повторите пароль" className="reginputpasspass" />
+                <input onChange={(e) => setLogin(e.target.value)} type="text" placeholder="Логин" className="reginput" />
+                <input onChange={(e) => setPass(e.target.value)} type="text" placeholder="Пароль" className="reginput" style={{ top: '11.5vh' }} />
+                <input onChange={(e) => setPassPass(e.target.value)} type="text" placeholder="Повторите пароль" className="reginput" style={{ top: '18vh' }} />
                 <button onClick={handleClick} className="regbutton">Зарегистрироваться</button>
                 <div style={{position: 'absolute',color: 'white',left: 'calc(50% + 4vh)',fontSize:'4vh'} }>Выберите аватар:</div>
                 <SelectedAva x={selavx} y={selavy}></SelectedAva>
-                <Avatimbut y='7' x='-2' img={avaimg0} onClick={() => { setSelavx(-3.5); setSelavy(5.5); }} />
-                <Avatimbut y='7' x='8' img={avaimg1} onClick={() => { setSelavx(6.5); setSelavy(5.5); }} />
-                <Avatimbut y='7' x='18' img={avaimg2} onClick={() => { setSelavx(16.5); setSelavy(5.5); }} />
-                <Avatimbut y='7' x='28' img={avaimg3} onClick={() => { setSelavx(26.5); setSelavy(5.5); }} />
-                <Avatimbut y='7' x='38' img={avaimg4} onClick={() => { setSelavx(36.5); setSelavy(5.5); }} />
-                <Avatimbut y='17' x='-2' img={avaimg5} onClick={() => { setSelavx(-3.5); setSelavy(15.5); }} />
-                <Avatimbut y='17' x='8' img={avaimg6} onClick={() => { setSelavx(6.5); setSelavy(15.5); }} />
-                <Avatimbut y='17' x='18' img={avaimg7} onClick={() => { setSelavx(16.5); setSelavy(15.5); }} />
-                <Avatimbut y='17' x='28' img={avaimg8} onClick={() => { setSelavx(26.5); setSelavy(15.5); }} />
-                <Avatimbut y='17' x='38' img={avaimg9} onClick={() => { setSelavx(36.5); setSelavy(15.5); }} />
+                <Avatimbut y='7' x='-2' img={avaimg0} onClick={() => { avaSelect(0) }} />
+                <Avatimbut y='7' x='8' img={avaimg1} onClick={() => { avaSelect(1) }} />
+                <Avatimbut y='7' x='18' img={avaimg2} onClick={() => { avaSelect(2) }} />
+                <Avatimbut y='7' x='28' img={avaimg3} onClick={() => { avaSelect(3) }} />
+                <Avatimbut y='7' x='38' img={avaimg4} onClick={() => { avaSelect(4) }} />
+                <Avatimbut y='17' x='-2' img={avaimg5} onClick={() => { avaSelect(5) }} />
+                <Avatimbut y='17' x='8' img={avaimg6} onClick={() => { avaSelect(6) }} />
+                <Avatimbut y='17' x='18' img={avaimg7} onClick={() => { avaSelect(7) }} />
+                <Avatimbut y='17' x='28' img={avaimg8} onClick={() => { avaSelect(8) }} />
+                <Avatimbut y='17' x='38' img={avaimg9} onClick={() => { avaSelect(9) }} />
             </div>
             <Link to="/" className="linkToLogin">У меня уже есть аккаунт, войти</Link>
             
@@ -295,8 +351,8 @@ function MenuComponent({ selctdMenu, children }) {
     return (
         <header className="App-header">
             <div className="bckgr"></div>
-            <img className="logolabel" src={logolabelimg} alt="Logo" />
-            <img className="logoimg" src={logoimgimg} alt="Logo" />
+            <img className="logo" src={logoimgimg} alt="Logo" />
+            <img className="logo" src={logolabelimg} alt="Logo" />
             <div className="menuTab">
                 <label onClick={Single}>Одиночная игра</label><br />
                 <label onClick={CrRoom}>Создать комнату</label><br />
@@ -308,6 +364,24 @@ function MenuComponent({ selctdMenu, children }) {
             </div>
             <SelectedMenu y={selctdMenu}></SelectedMenu>
             <div className="menuBigTab">{children}</div>
+        </header>
+    );
+}
+function FieldEdit() {
+    const navigate = useNavigate();
+    function handleClick() {
+        navigate('/match');
+    }
+
+
+    return (
+        <header className="App-header">
+            <div className="bckgr"></div>
+            <div className="fieldEditBigTab">
+                {
+                }
+            </div>
+
         </header>
     );
 }
