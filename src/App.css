@@ -125,6 +125,14 @@
     font-size: 2vh;
     font-weight: bold;
 }
+button {
+    border: none;
+    border-radius: 2.5vh;
+    box-shadow: inset 0px -10px 10px 0px rgb(0,0,0,0.3);
+    color: rgb(255,255,255);
+    background-color: #39AB43;
+    font-weight: bold;
+}
 .logbutton {
     position: absolute;
     top: 18vh;
@@ -133,14 +141,9 @@
     height: 5vh;
     padding: 0 2vh;
     transform: translate(-50%, -50%);
-    border: none;
-    border-radius: 2.5vh;
-    box-shadow: inset 0px -10px 10px 0px rgb(0,0,0,0.3);
     font-size: 2vh;
-    font-weight: bold;
-    color: rgb(255,255,255);
-    background-color: #39AB43;
 }
+
 .linkToReg {
     position: absolute;
     top: 75vh;
@@ -236,13 +239,7 @@
     margin-top: 0;
     margin-bottom: 0;
     transform: translate(0, -50%);
-    border: none;
-    border-radius: 2.5vh;
-    box-shadow: inset 0px -10px 10px 0px rgb(0,0,0,0.3);
     font-size: 2vh;
-    font-weight: bold;
-    color: rgb(255,255,255);
-    background-color: #39AB43;
 }
 .avatarimgbut {
     position: absolute;
@@ -324,7 +321,6 @@
 }
 .assButt {
     position: absolute;
-    
     left: calc(50% - 70vh);
     width: 40vh;
     height: 7vh;
@@ -338,3 +334,87 @@
     color: rgb(255,255,255);
     background-color: rgba(255,255,255,0);
 }
+
+.sgencodefield {
+    position: absolute;
+    top: 33vh;
+    left: 10vh;
+    width: 50vh;
+    height: 7vh;
+    padding: 0 2vh;
+    transform: translate(0, -50%);
+    border: none;
+    border-radius: 5vh;
+    box-sizing: border-box;
+    box-shadow: inset 0px -10px 10px 0px rgb(0,0,0,0.3);
+    font-size: 4vh;
+    font-weight: bold;
+}
+
+.singleplaybutt {
+    position: absolute;
+    top: 43vh;
+    left: calc(50% + 30vh);
+    width: 20vh;
+    height: 7vh;
+    transform: translate(-50%, -50%);
+    font-size: 4vh;
+    border-radius: 100vh;
+}
+.copybutt {
+    position: absolute;
+    top: 33vh;
+    left: calc(50% + 30vh);
+    width: 30vh;
+    height: 7vh;
+    transform: translate(-50%, -50%);
+    font-size: 4vh;
+    border-radius: 100vh;
+}
+.profSetInputs {
+    position: absolute;
+    left: calc(50% - 47.5vh);
+    width: 60vh;
+    height: 5vh;
+    padding: 0 2vh;
+    transform: translate(0, -50%);
+    border: none;
+    border-radius: 2.5vh;
+    box-sizing: border-box;
+    box-shadow: inset 0px -10px 10px 0px rgb(0,0,0,0.3);
+    font-size: 2vh;
+    font-weight: bold;
+}
+.savebutt {
+    position: absolute;
+    top: 61vh;
+    left: calc(50% + 30vh);
+    width: 30vh;
+    height: 5vh;
+    transform: translate(-50%, -50%);
+    font-size: 2vh;
+    border-radius: 100vh;
+}
+.rulesScroll {
+    position: absolute;
+    top: 50%;
+    left: 1vh;
+    transform: translate(0,-50%);
+    overflow-y: auto;
+    height: 60vh;
+    width: 95vh;
+    word-wrap: normal;
+}
+    .rulesScroll::-webkit-scrollbar {
+        width: 2vh;
+    }
+
+    .rulesScroll::-webkit-scrollbar-track {
+        background: rgb(255,255,255,0.4);
+        border-radius: 1vh;
+    }
+
+    .rulesScroll::-webkit-scrollbar-thumb {
+        background: rgb(255,255,255,0.4);
+        border-radius: 1vh;
+    }
