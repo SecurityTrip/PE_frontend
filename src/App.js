@@ -1,5 +1,5 @@
 ﻿import './App.css';
-import React, { useState, useMemo, useRef } from 'react';
+import React, { useState, useMemo, useRef, useEffect } from 'react';
 import logolabelimg from './лого_надпись.png';
 import logoimgimg from './лого_корабль.png';
 import { BrowserRouter as Router, Route, Routes, useNavigate,Link } from 'react-router-dom';
@@ -373,27 +373,212 @@ function MenuComponent({ selctdMenu, children }) {
 }
 function FieldEdit() {
     const navigate = useNavigate();
+    const [movinShip, setMS] = useState(-1);
     function handleClick() {
         navigate('/match');
     }
+    const [mos, setMos] = useState(null);
 
     const grid = useMemo(() => {
         let trt = []
+        let id = 0;
         for (let y = 0; y < 10; y++)
-            for (let x = 0; x < 10; x++)
-                trt.push({ x, y });
+            for (let x = 0; x < 10; x++) {
+                trt.push({ id, x, y });
+                id++;
+            }
+                
         return trt;
     })
-    function MouseDown(i) {
-
+    function MouseDown(e,i) {
+        setMos([e.screenX, e.screenY]);
+        const ships = shipsRef.current;
+        ships[i].px = ships[i].rqx;
+        ships[i].py = ships[i].rqy;
+        setMS(i);
     }
+    function MouseMove(e) {
+        if (movinShip > -1) {
+            const ships = shipsRef.current;
+            ships[movinShip].rqx = ships[movinShip].px + (e.screenX - mos[0]);
+            ships[movinShip].rqy = ships[movinShip].py + (e.screenY - mos[1]);
+            console.log(ships[movinShip].rqy,movinShip);
+        }
+    }
+    function MouseUp(e) {
+        if (movinShip > -1) {
+            const ships = shipsRef.current;
+            ships[movinShip].rqx = ships[movinShip].px + (e.x - mos[0]);
+            ships[movinShip].rqy = ships[movinShip].py + (e.y - mos[1]);
+            let qbob = scrtogrid(ships[movinShip].rqx);
+            let bbob = scrtogrid(ships[movinShip].rqy);
+            ships[movinShip].rqx = gridtoscr(qbob);
+            ships[movinShip].rqy = gridtoscr(bbob);
+            //for (let y = 0; y < 10; y++)
+            //    for (let x = 0; x < 10; x++) {
+            //        if (field[y][x] == 1) field[y][x] = 0;
+            //    }
+            //переделать под проверку поля всего
+            if (mos[0] == e.x && mos[1] == e.y) {
+                if (ships[movinShip].rot == 0)
+                    ships[movinShip].rot = 1;
+                else
+                    ships[movinShip].rot = 0;
+            }
+            //переделать под проверку поля всего
+            //if (bbob >= 0 && bbob < 10 && qbob >= 0 && qbob < 10)
+            //    field[bbob][qbob] = 1;
+            //if (ships[imove].rot == 0) {
+            //    if (bbob >= 0 && bbob < 10 && qbob+1 >= 0 && qbob+1 < 10)
+            //        field[bbob][qbob + 1] = 1;
+            //    if (bbob >= 0 && bbob < 10 && qbob+2 >= 0 && qbob+2 < 10)
+            //        field[bbob][qbob + 2] = 1;
+            //    if (bbob >= 0 && bbob < 10 && qbob+3 >= 0 && qbob+3 < 10)
+            //    field[bbob][qbob + 3] = 1;
+            //}
+            //else {
+            //    if (bbob+1 >= 0 && bbob+1 < 10 && qbob >= 0 && qbob < 10)
+            //        field[bbob + 1][qbob] = 1;
+            //    if (bbob+2 >= 0 && bbob+2 < 10 && qbob >= 0 && qbob < 10)
+            //        field[bbob + 2][qbob] = 1;
+            //    if (bbob+3 >= 0 && bbob+3 < 10 && qbob >= 0 && qbob < 10)
+            //    field[bbob + 3][qbob] = 1;
+            //}
 
+
+            setMos(null)
+            setMS(-1);
+        }
+    }
+    const lastFrameTime = useRef(0);
+    const requestRef = useRef();
+    const [tick, setTick] = useState(0);
+    const render = (time) => {
+        // Вызывается каждый кадр (60 Гц ≈ каждые 16.6 мс)
+        const deltaTime = time - lastFrameTime.current;
+        lastFrameTime.current = time;
+        for (let i = 0; i < 9; i++) {
+
+            const ships = shipsRef.current;
+            ships[i].tx += (ships[i].rqx - ships[i].tx) * 0.1;
+            ships[i].ty += (ships[i].rqy - ships[i].ty) * 0.1;
+
+            console.log(ships[8]);
+        }
+        setTick(t => t + 1); // заставляем React перерисоваться
+        // Перезапустить цикл
+        requestRef.current = requestAnimationFrame(render);
+    };
+    useEffect(() => {
+        requestRef.current = requestAnimationFrame(render);
+        return () => cancelAnimationFrame(requestRef.current);
+    }, []);
+    function scrtogrid(pos) {
+        return Math.round(pos / 1 - 1.5);
+    }
+    function gridtoscr(pos) {
+        return (pos + 1.5) * 1;
+    }
+    const shipsRef =useRef( [
+        {
+            px: gridtoscr(14),
+            py: gridtoscr(3),
+            rqx: gridtoscr(14),
+            rqy: gridtoscr(3),
+            tx: gridtoscr(14),
+            ty: gridtoscr(3),
+            len: 1,
+            rot: 0
+        },
+        {
+            px: gridtoscr(13),
+            py: gridtoscr(3),
+            rqx: gridtoscr(13),
+            rqy: gridtoscr(3),
+            tx: gridtoscr(13),
+            ty: gridtoscr(3),
+            len: 1,
+            rot: 0
+        },
+        {
+            px: gridtoscr(12),
+            py: gridtoscr(3),
+            rqx: gridtoscr(12),
+            rqy: gridtoscr(3),
+            tx: gridtoscr(12),
+            ty: gridtoscr(3),
+            len: 1,
+            rot: 0
+        },
+        {
+            px: gridtoscr(11),
+            py: gridtoscr(3),
+            rqx: gridtoscr(11),
+            rqy: gridtoscr(3),
+            tx: gridtoscr(11),
+            ty: gridtoscr(3),
+            len: 1,
+            rot: 0
+        },
+        {
+            px: gridtoscr(13),
+            py: gridtoscr(2),
+            rqx: gridtoscr(13),
+            rqy: gridtoscr(2),
+            tx: gridtoscr(13),
+            ty: gridtoscr(2),
+            len: 2,
+            rot: 0
+        },
+        {
+            px: gridtoscr(11),
+            py: gridtoscr(2),
+            rqx: gridtoscr(11),
+            rqy: gridtoscr(2),
+            tx: gridtoscr(11),
+            ty: gridtoscr(2),
+            len: 2,
+            rot: 0
+        },
+        {
+            px: gridtoscr(14),
+            py: gridtoscr(1),
+            rqx: gridtoscr(14),
+            rqy: gridtoscr(1),
+            tx: gridtoscr(14),
+            ty: gridtoscr(1),
+            len: 3,
+            rot: 0
+        },
+        {
+            px: gridtoscr(11),
+            py: gridtoscr(1),
+            rqx: gridtoscr(11),
+            rqy: gridtoscr(1),
+            tx: gridtoscr(11),
+            ty: gridtoscr(1),
+            len: 3,
+            rot: 0
+        },
+        {
+            px: 0,
+            py: 0,
+            rqx: 0,
+            rqy: 0,
+            tx: 0,
+            ty: 0,
+            len: 4,
+            rot: 0
+        },
+    ])
+    const ships = shipsRef.current;
     return (
         <header className="App-header">
             <div className="bckgr"></div>
-            <div className="fieldEditBigTab">
+            <div className="fieldEditBigTab" onMouseUp={(e) => MouseUp(e)} onMouseMove={(e)=>MouseMove(e)}>
                 {grid.map(el =>
-                    <div style={{
+                    <div key= {el.id} style={{
+                        
                         position: 'absolute',
                         left: el.x*7.7 + 3+'vh',
                         top: el.y*7.7 + 3 + 'vh',
@@ -414,16 +599,16 @@ function FieldEdit() {
                 <button className='fieldButt' style={{ top: '60vh' }}>Случайно</button>
                 <button className='fieldButt' style={{ top: '67vh' }}>Береговой метод</button>
                 <button className='fieldButt' style={{ top: '74vh' }}>Ассиметричный метод</button>
-                <img alt='' onMouseDown={MouseDown(0)} src={p4} style={{ height: '5.3vh', position: 'absolute', transform: 'rotate(0deg)', left: '3.8vh', top:'3.8vh' }}></img>
-                <img alt='' onMouseDown={MouseDown(1)} src={p3} style={{ height: '5.3vh', position: 'absolute', transform: 'rotate(0deg)', left: '3.8vh', top: '11.5vh' }}></img>
-                <img alt='' onMouseDown={MouseDown(2)} src={p3} style={{ height: '5.3vh', position: 'absolute', transform: 'rotate(0deg)', left: '26.9vh', top: '11.5vh' }}></img>
-                <img alt='' onMouseDown={MouseDown(3)} src={p2} style={{ height: '5.3vh', position: 'absolute', transform: 'rotate(0deg)', left: '3.8vh', top: '19.2vh' }}></img>
-                <img alt='' onMouseDown={MouseDown(4)} src={p2} style={{ height: '5.3vh', position: 'absolute', transform: 'rotate(0deg)', left: '19.2vh', top: '19.2vh' }}></img>
-                <img alt='' onMouseDown={MouseDown(5)} src={p2} style={{ height: '5.3vh', position: 'absolute', transform: 'rotate(0deg)', left: '34.6vh', top: '19.2vh' }}></img>
-                <img alt='' onMouseDown={MouseDown(6)} src={p1} style={{ height: '5.3vh', position: 'absolute', transform: 'rotate(0deg)', left: '3.8vh', top: '26.9vh' }}></img>
-                <img alt='' onMouseDown={MouseDown(7)} src={p1} style={{ height: '5.3vh', position: 'absolute', transform: 'rotate(0deg)', left: '11.5vh', top: '26.9vh' }}></img>
-                <img alt='' onMouseDown={MouseDown(8)} src={p1} style={{ height: '5.3vh', position: 'absolute', transform: 'rotate(0deg)', left: '3.8vh', top: '26.9vh' }}></img>
-                <img alt='' onMouseDown={MouseDown(9)} src={p1} style={{ height: '5.3vh', position: 'absolute', transform: 'rotate(0deg)', left: '3.8vh', top: '26.9vh' }}></img>
+                <img draggable={false} alt='' onMouseDown={(e) => MouseDown(e, 8)} src={p4} style={{ height: '5.3vh', position: 'absolute', transform: 1 ? 'rotate(90deg) translate(0, -100%)' : 'rotate(0deg)', transformOrigin: 'top left', left: 3.8 + ships[8].tx * 7.7 + 'vh', top: 3.8 + ships[8].ty * 7.7 + 'vh' }}></img>
+                <img draggable={false} alt='' onMouseDown={(e) => MouseDown(e,1)} src={p3} style={{ height: '5.3vh', position: 'absolute', transform: 0 ? 'rotate(90deg) translate(0, -100%)' : 'rotate(0deg)', transformOrigin: 'top left', left: '3.8vh', top: '11.5vh' }}></img>
+                <img draggable={false} alt='' onMouseDown={(e) => MouseDown(e,2)} src={p3} style={{ height: '5.3vh', position: 'absolute', transform: 0 ? 'rotate(90deg) translate(0, -100%)' : 'rotate(0deg)', transformOrigin: 'top left', left: '26.9vh', top: '11.5vh' }}></img>
+                <img draggable={false} alt='' onMouseDown={(e) => MouseDown(e,3)} src={p2} style={{ height: '5.3vh', position: 'absolute', transform: 0 ? 'rotate(90deg) translate(0, -100%)' : 'rotate(0deg)', transformOrigin: 'top left', left: '3.8vh', top: '19.2vh' }}></img>
+                <img draggable={false} alt='' onMouseDown={(e) => MouseDown(e,4)} src={p2} style={{ height: '5.3vh', position: 'absolute', transform: 0 ? 'rotate(90deg) translate(0, -100%)' : 'rotate(0deg)', transformOrigin: 'top left', left: '19.2vh', top: '19.2vh' }}></img>
+                <img draggable={false} alt='' onMouseDown={(e) => MouseDown(e,5)} src={p2} style={{ height: '5.3vh', position: 'absolute', transform: 0 ? 'rotate(90deg) translate(0, -100%)' : 'rotate(0deg)', transformOrigin: 'top left', left: '34.6vh', top: '19.2vh' }}></img>
+                <img draggable={false} alt='' onMouseDown={(e) => MouseDown(e,6)} src={p1} style={{ height: '5.3vh', position: 'absolute', transform: 0 ? 'rotate(90deg) translate(0, -100%)' : 'rotate(0deg)', transformOrigin: 'top left', left: '3.8vh', top: '26.9vh' }}></img>
+                <img draggable={false} alt='' onMouseDown={(e) => MouseDown(e,7)} src={p1} style={{ height: '5.3vh', position: 'absolute', transform: 0 ? 'rotate(90deg) translate(0, -100%)' : 'rotate(0deg)', transformOrigin: 'top left', left: '11.5vh', top: '26.9vh' }}></img>
+                <img draggable={false} alt='' onMouseDown={(e) => MouseDown(e,0)} src={p1} style={{ height: '5.3vh', position: 'absolute', transform: 0 ? 'rotate(90deg) translate(0, -100%)' : 'rotate(0deg)', transformOrigin: 'top left', left: '3.8vh', top: '26.9vh' }}></img>
+                <img draggable={false} alt='' onMouseDown={(e) => MouseDown(e,9)} src={p1} style={{ height: '5.3vh', position: 'absolute', transform: 0 ? 'rotate(90deg) translate(0, -100%)' : 'rotate(0deg)', transformOrigin: 'top left', left: '3.8vh', top: '26.9vh' }}></img>
             </div>
 
         </header>
