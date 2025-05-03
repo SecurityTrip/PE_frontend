@@ -1,5 +1,5 @@
 ﻿import './App.css';
-import React, { useState } from 'react';
+import React, { useState, useMemo, useRef } from 'react';
 import logolabelimg from './лого_надпись.png';
 import logoimgimg from './лого_корабль.png';
 import { BrowserRouter as Router, Route, Routes, useNavigate,Link } from 'react-router-dom';
@@ -13,6 +13,10 @@ import avaimg6 from './avas/avaimg6.gif';
 import avaimg7 from './avas/avaimg7.gif';
 import avaimg8 from './avas/avaimg8.gif';
 import avaimg9 from './avas/avaimg9.gif';
+import p1 from './ps/p1.png';
+import p2 from './ps/p2.png';
+import p3 from './ps/p3.png';
+import p4 from './ps/p4.png';
 function App() {
     return (
         <Router>
@@ -150,7 +154,7 @@ function Regis() {
 }
 function Avatimbut({ y, x, img,onClick }) {
     return (
-        <img alt="avatar_img" className="avatarimgbut" onClick={ onClick} style={{ top: y + 'vh', left: 'calc(50% + ' + x + 'vh', backgroundImage: 'url(' + img + ')', backgroundSize: 'cover'  } }></img>
+        <img alt="avatar_img" src={img } className="avatarimgbut" onClick={ onClick} style={{ top: y + 'vh', left: 'calc(50% + ' + x + 'vh', backgroundSize: 'cover'  } }></img>
     );
 }
 function SelectedAva({y,x }) {
@@ -373,13 +377,53 @@ function FieldEdit() {
         navigate('/match');
     }
 
+    const grid = useMemo(() => {
+        let trt = []
+        for (let y = 0; y < 10; y++)
+            for (let x = 0; x < 10; x++)
+                trt.push({ x, y });
+        return trt;
+    })
+    function MouseDown(i) {
+
+    }
 
     return (
         <header className="App-header">
             <div className="bckgr"></div>
             <div className="fieldEditBigTab">
-                {
+                {grid.map(el =>
+                    <div style={{
+                        position: 'absolute',
+                        left: el.x*7.7 + 3+'vh',
+                        top: el.y*7.7 + 3 + 'vh',
+                        width: '7vh',
+                        height: '7vh',
+                        backgroundColor: 'rgb(0,0,0,0.5)',
+                        borderRadius:'1vh'
+                    }}></div>
+                )
                 }
+                <label style={
+                    {
+                        position: 'absolute',
+                        left: '85vh',
+                        top: '52vh',
+                    }
+                }>Расставить автоматически:</label>
+                <button className='fieldButt' style={{ top: '60vh' }}>Случайно</button>
+                <button className='fieldButt' style={{ top: '67vh' }}>Береговой метод</button>
+                <button className='fieldButt' style={{ top: '74vh' }}>Ассиметричный метод</button>
+                <img alt='' onMouseDown={MouseDown(0)} src={p4} style={{ height: '5.3vh', position: 'absolute', transform: 'rotate(0deg)', left: '3.8vh', top:'3.8vh' }}></img>
+                <img alt='' onMouseDown={MouseDown(1)} src={p3} style={{ height: '5.3vh', position: 'absolute', transform: 'rotate(0deg)', left: '3.8vh', top: '11.5vh' }}></img>
+                <img alt='' onMouseDown={MouseDown(2)} src={p3} style={{ height: '5.3vh', position: 'absolute', transform: 'rotate(0deg)', left: '26.9vh', top: '11.5vh' }}></img>
+                <img alt='' onMouseDown={MouseDown(3)} src={p2} style={{ height: '5.3vh', position: 'absolute', transform: 'rotate(0deg)', left: '3.8vh', top: '19.2vh' }}></img>
+                <img alt='' onMouseDown={MouseDown(4)} src={p2} style={{ height: '5.3vh', position: 'absolute', transform: 'rotate(0deg)', left: '19.2vh', top: '19.2vh' }}></img>
+                <img alt='' onMouseDown={MouseDown(5)} src={p2} style={{ height: '5.3vh', position: 'absolute', transform: 'rotate(0deg)', left: '34.6vh', top: '19.2vh' }}></img>
+                <img alt='' onMouseDown={MouseDown(6)} src={p1} style={{ height: '5.3vh', position: 'absolute', transform: 'rotate(0deg)', left: '3.8vh', top: '26.9vh' }}></img>
+                <img alt='' onMouseDown={MouseDown(7)} src={p1} style={{ height: '5.3vh', position: 'absolute', transform: 'rotate(0deg)', left: '11.5vh', top: '26.9vh' }}></img>
+                <img alt='' onMouseDown={MouseDown(8)} src={p1} style={{ height: '5.3vh', position: 'absolute', transform: 'rotate(0deg)', left: '3.8vh', top: '26.9vh' }}></img>
+                <img alt='' onMouseDown={MouseDown(9)} src={p1} style={{ height: '5.3vh', position: 'absolute', transform: 'rotate(0deg)', left: '3.8vh', top: '26.9vh' }}></img>
             </div>
 
         </header>
