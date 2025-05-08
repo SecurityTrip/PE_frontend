@@ -398,29 +398,31 @@ function FieldEdit() {
         setMS(i);
     }
     function MouseMove(e) {
+        console.log()
         if (movinShip > -1) {
             const ships = shipsRef.current;
-            ships[movinShip].rqx = ships[movinShip].px + (e.screenX - mos[0]);
-            ships[movinShip].rqy = ships[movinShip].py + (e.screenY - mos[1]);
-            console.log(ships[movinShip].rqy,movinShip);
+            ships[movinShip].rqx = ships[movinShip].px + (e.screenX - mos[0]) / (window.innerHeight*0.077);
+            ships[movinShip].rqy = ships[movinShip].py + (e.screenY - mos[1]) / (window.innerHeight*0.077);
+            console.log((e.screenX - mos[0]) / (window.innerHeight * 0.077));
+            //console.log(ships[movinShip].rqy,movinShip);
         }
     }
     function MouseUp(e) {
         if (movinShip > -1) {
             const ships = shipsRef.current;
-            ships[movinShip].rqx = ships[movinShip].px + (e.x - mos[0]);
-            ships[movinShip].rqy = ships[movinShip].py + (e.y - mos[1]);
-            let qbob = scrtogrid(ships[movinShip].rqx);
-            let bbob = scrtogrid(ships[movinShip].rqy);
-            ships[movinShip].rqx = gridtoscr(qbob);
-            ships[movinShip].rqy = gridtoscr(bbob);
+            ships[movinShip].rqx = Math.round(ships[movinShip].px + (e.screenX - mos[0]) / (window.innerHeight * 0.077));
+            ships[movinShip].rqy = Math.round(ships[movinShip].py + (e.screenY - mos[1]) / (window.innerHeight * 0.077));
+            //let qbob = ships[movinShip].rqx//scrtogrid(ships[movinShip].rqx);
+            //let bbob = ships[movinShip].rqy//scrtogrid(ships[movinShip].rqy);
+            //ships[movinShip].rqx = qbob//gridtoscr(qbob);
+            //ships[movinShip].rqy = bbob//gridtoscr(bbob);
             //for (let y = 0; y < 10; y++)
             //    for (let x = 0; x < 10; x++) {
             //        if (field[y][x] == 1) field[y][x] = 0;
             //    }
             //переделать под проверку поля всего
-            if (mos[0] == e.x && mos[1] == e.y) {
-                if (ships[movinShip].rot == 0)
+            if (mos[0] === e.x && mos[1] === e.y) {
+                if (ships[movinShip].rot === 0)
                     ships[movinShip].rot = 1;
                 else
                     ships[movinShip].rot = 0;
@@ -463,7 +465,7 @@ function FieldEdit() {
             ships[i].tx += (ships[i].rqx - ships[i].tx) * 0.1;
             ships[i].ty += (ships[i].rqy - ships[i].ty) * 0.1;
 
-            console.log(ships[8]);
+            //console.log(ships[8]);
         }
         setTick(t => t + 1); // заставляем React перерисоваться
         // Перезапустить цикл
