@@ -583,9 +583,9 @@ function FieldEdit() {
     ])
     const ships = shipsRef.current;
     return (
-        <header className="App-header">
+        <header className="App-header" onMouseUp={(e) => MouseUp(e)} onMouseMove={(e) => MouseMove(e)}>
             <div className="bckgr"></div>
-            <div className="fieldEditBigTab" onMouseUp={(e) => MouseUp(e)} onMouseMove={(e)=>MouseMove(e)}>
+            <div className="fieldEditBigTab">
                 {grid.map(el =>
                     <div key= {el.id} style={{
                         
