@@ -37,7 +37,6 @@ function App() {
         </Router>
     );
 }
-
 function Auth() {
     const navigate = useNavigate();
     const [login, setLogin] = useState('');
@@ -421,7 +420,7 @@ function FieldEdit() {
             //        if (field[y][x] == 1) field[y][x] = 0;
             //    }
             //переделать под проверку поля всего
-            if (mos[0] === e.x && mos[1] === e.y) {
+            if (mos[0] === e.screenX && mos[1] === e.screenY) {
                 if (ships[movinShip].rot === 0)
                     ships[movinShip].rot = 1;
                 else
@@ -459,13 +458,12 @@ function FieldEdit() {
         // Вызывается каждый кадр (60 Гц ≈ каждые 16.6 мс)
         const deltaTime = time - lastFrameTime.current;
         lastFrameTime.current = time;
-        for (let i = 0; i < 9; i++) {
+        for (let i = 0; i < ships.length; i++) {
 
             const ships = shipsRef.current;
             ships[i].tx += (ships[i].rqx - ships[i].tx) * 0.1;
             ships[i].ty += (ships[i].rqy - ships[i].ty) * 0.1;
-
-            //console.log(ships[8]);
+            
         }
         setTick(t => t + 1); // заставляем React перерисоваться
         // Перезапустить цикл
@@ -481,84 +479,94 @@ function FieldEdit() {
     function gridtoscr(pos) {
         return (pos + 1.5) * 1;
     }
-    const shipsRef =useRef( [
+    const shipsRef = useRef([
         {
-            px: gridtoscr(14),
-            py: gridtoscr(3),
-            rqx: gridtoscr(14),
-            rqy: gridtoscr(3),
-            tx: gridtoscr(14),
-            ty: gridtoscr(3),
+            px: 3,
+            py: 3,
+            rqx: 3,
+            rqy: 3,
+            tx: 3,
+            ty: 3,
             len: 1,
             rot: 0
         },
         {
-            px: gridtoscr(13),
-            py: gridtoscr(3),
-            rqx: gridtoscr(13),
-            rqy: gridtoscr(3),
-            tx: gridtoscr(13),
-            ty: gridtoscr(3),
+            px: 2,
+            py: 3,
+            rqx: 2,
+            rqy: 3,
+            tx: 2,
+            ty: 3,
             len: 1,
             rot: 0
         },
         {
-            px: gridtoscr(12),
-            py: gridtoscr(3),
-            rqx: gridtoscr(12),
-            rqy: gridtoscr(3),
-            tx: gridtoscr(12),
-            ty: gridtoscr(3),
+            px: 1,
+            py: 3,
+            rqx: 1,
+            rqy: 3,
+            tx: 1,
+            ty: 3,
             len: 1,
             rot: 0
         },
         {
-            px: gridtoscr(11),
-            py: gridtoscr(3),
-            rqx: gridtoscr(11),
-            rqy: gridtoscr(3),
-            tx: gridtoscr(11),
-            ty: gridtoscr(3),
+            px: 0,
+            py: 3,
+            rqx: 0,
+            rqy: 3,
+            tx: 0,
+            ty: 3,
             len: 1,
             rot: 0
         },
         {
-            px: gridtoscr(13),
-            py: gridtoscr(2),
-            rqx: gridtoscr(13),
-            rqy: gridtoscr(2),
-            tx: gridtoscr(13),
-            ty: gridtoscr(2),
+            px: 4,
+            py: 2,
+            rqx: 4,
+            rqy: 2,
+            tx: 4,
+            ty: 2,
             len: 2,
             rot: 0
         },
         {
-            px: gridtoscr(11),
-            py: gridtoscr(2),
-            rqx: gridtoscr(11),
-            rqy: gridtoscr(2),
-            tx: gridtoscr(11),
-            ty: gridtoscr(2),
+            px: 2,
+            py: 2,
+            rqx: 2,
+            rqy: 2,
+            tx: 2,
+            ty: 2,
             len: 2,
             rot: 0
         },
         {
-            px: gridtoscr(14),
-            py: gridtoscr(1),
-            rqx: gridtoscr(14),
-            rqy: gridtoscr(1),
-            tx: gridtoscr(14),
-            ty: gridtoscr(1),
+            px: 0,
+            py: 2,
+            rqx: 0,
+            rqy: 2,
+            tx: 0,
+            ty: 2,
+            len: 2,
+            rot: 0
+        },
+        {
+            px: 3,
+            py: 1,
+            rqx: 3,
+            rqy: 1,
+            tx: 3,
+            ty: 1,
             len: 3,
             rot: 0
         },
         {
-            px: gridtoscr(11),
-            py: gridtoscr(1),
-            rqx: gridtoscr(11),
-            rqy: gridtoscr(1),
-            tx: gridtoscr(11),
-            ty: gridtoscr(1),
+            px: 0,
+            py: 1,
+            rqx: 0,
+            rqy: 1,
+            tx: 0,
+            ty: 1,
             len: 3,
             rot: 0
         },
@@ -601,16 +609,16 @@ function FieldEdit() {
                 <button className='fieldButt' style={{ top: '60vh' }}>Случайно</button>
                 <button className='fieldButt' style={{ top: '67vh' }}>Береговой метод</button>
                 <button className='fieldButt' style={{ top: '74vh' }}>Ассиметричный метод</button>
-                <img draggable={false} alt='' onMouseDown={(e) => MouseDown(e, 8)} src={p4} style={{ height: '5.3vh', position: 'absolute', transform: 1 ? 'rotate(90deg) translate(0, -100%)' : 'rotate(0deg)', transformOrigin: 'top left', left: 3.8 + ships[8].tx * 7.7 + 'vh', top: 3.8 + ships[8].ty * 7.7 + 'vh' }}></img>
-                <img draggable={false} alt='' onMouseDown={(e) => MouseDown(e,1)} src={p3} style={{ height: '5.3vh', position: 'absolute', transform: 0 ? 'rotate(90deg) translate(0, -100%)' : 'rotate(0deg)', transformOrigin: 'top left', left: '3.8vh', top: '11.5vh' }}></img>
-                <img draggable={false} alt='' onMouseDown={(e) => MouseDown(e,2)} src={p3} style={{ height: '5.3vh', position: 'absolute', transform: 0 ? 'rotate(90deg) translate(0, -100%)' : 'rotate(0deg)', transformOrigin: 'top left', left: '26.9vh', top: '11.5vh' }}></img>
-                <img draggable={false} alt='' onMouseDown={(e) => MouseDown(e,3)} src={p2} style={{ height: '5.3vh', position: 'absolute', transform: 0 ? 'rotate(90deg) translate(0, -100%)' : 'rotate(0deg)', transformOrigin: 'top left', left: '3.8vh', top: '19.2vh' }}></img>
-                <img draggable={false} alt='' onMouseDown={(e) => MouseDown(e,4)} src={p2} style={{ height: '5.3vh', position: 'absolute', transform: 0 ? 'rotate(90deg) translate(0, -100%)' : 'rotate(0deg)', transformOrigin: 'top left', left: '19.2vh', top: '19.2vh' }}></img>
-                <img draggable={false} alt='' onMouseDown={(e) => MouseDown(e,5)} src={p2} style={{ height: '5.3vh', position: 'absolute', transform: 0 ? 'rotate(90deg) translate(0, -100%)' : 'rotate(0deg)', transformOrigin: 'top left', left: '34.6vh', top: '19.2vh' }}></img>
-                <img draggable={false} alt='' onMouseDown={(e) => MouseDown(e,6)} src={p1} style={{ height: '5.3vh', position: 'absolute', transform: 0 ? 'rotate(90deg) translate(0, -100%)' : 'rotate(0deg)', transformOrigin: 'top left', left: '3.8vh', top: '26.9vh' }}></img>
-                <img draggable={false} alt='' onMouseDown={(e) => MouseDown(e,7)} src={p1} style={{ height: '5.3vh', position: 'absolute', transform: 0 ? 'rotate(90deg) translate(0, -100%)' : 'rotate(0deg)', transformOrigin: 'top left', left: '11.5vh', top: '26.9vh' }}></img>
-                <img draggable={false} alt='' onMouseDown={(e) => MouseDown(e,0)} src={p1} style={{ height: '5.3vh', position: 'absolute', transform: 0 ? 'rotate(90deg) translate(0, -100%)' : 'rotate(0deg)', transformOrigin: 'top left', left: '3.8vh', top: '26.9vh' }}></img>
-                <img draggable={false} alt='' onMouseDown={(e) => MouseDown(e,9)} src={p1} style={{ height: '5.3vh', position: 'absolute', transform: 0 ? 'rotate(90deg) translate(0, -100%)' : 'rotate(0deg)', transformOrigin: 'top left', left: '3.8vh', top: '26.9vh' }}></img>
+                <img draggable={false} alt='' onMouseDown={(e) => MouseDown(e, 9)} src={p4} style={{ height: '5.3vh', position: 'absolute', transform: ships[9].rot ? 'rotate(90deg) translate(0, -100%)' : 'rotate(0deg)', transformOrigin: 'top left', left: 3.8 + ships[9].tx * 7.7 + 'vh', top: 3.8 + ships[9].ty * 7.7 + 'vh' }}></img>
+                <img draggable={false} alt='' onMouseDown={(e) => MouseDown(e, 8)} src={p3} style={{ height: '5.3vh', position: 'absolute', transform: ships[8].rot ? 'rotate(90deg) translate(0, -100%)' : 'rotate(0deg)', transformOrigin: 'top left', left: 3.8 + ships[8].tx * 7.7 + 'vh', top: 3.8 + ships[8].ty * 7.7 + 'vh' }}></img>
+                <img draggable={false} alt='' onMouseDown={(e) => MouseDown(e, 7)} src={p3} style={{ height: '5.3vh', position: 'absolute', transform: ships[7].rot ? 'rotate(90deg) translate(0, -100%)' : 'rotate(0deg)', transformOrigin: 'top left', left: 3.8 + ships[7].tx * 7.7 + 'vh', top: 3.8 + ships[7].ty * 7.7 + 'vh' }}></img>
+                <img draggable={false} alt='' onMouseDown={(e) => MouseDown(e, 6)} src={p2} style={{ height: '5.3vh', position: 'absolute', transform: ships[6].rot ? 'rotate(90deg) translate(0, -100%)' : 'rotate(0deg)', transformOrigin: 'top left', left: 3.8 + ships[6].tx * 7.7 + 'vh', top: 3.8 + ships[6].ty * 7.7 + 'vh' }}></img>
+                <img draggable={false} alt='' onMouseDown={(e) => MouseDown(e, 5)} src={p2} style={{ height: '5.3vh', position: 'absolute', transform: ships[5].rot ? 'rotate(90deg) translate(0, -100%)' : 'rotate(0deg)', transformOrigin: 'top left', left: 3.8 + ships[5].tx * 7.7 + 'vh', top: 3.8 + ships[5].ty * 7.7 + 'vh' }}></img>
+                <img draggable={false} alt='' onMouseDown={(e) => MouseDown(e, 4)} src={p2} style={{ height: '5.3vh', position: 'absolute', transform: ships[4].rot ? 'rotate(90deg) translate(0, -100%)' : 'rotate(0deg)', transformOrigin: 'top left', left: 3.8 + ships[4].tx * 7.7 + 'vh', top: 3.8 + ships[4].ty * 7.7 + 'vh' }}></img>
+                <img draggable={false} alt='' onMouseDown={(e) => MouseDown(e, 3)} src={p1} style={{ height: '5.3vh', position: 'absolute', transform: ships[3].rot ? 'rotate(90deg) translate(0, -100%)' : 'rotate(0deg)', transformOrigin: 'top left', left: 3.8 + ships[3].tx * 7.7 + 'vh', top: 3.8 + ships[3].ty * 7.7 + 'vh' }}></img>
+                <img draggable={false} alt='' onMouseDown={(e) => MouseDown(e, 2)} src={p1} style={{ height: '5.3vh', position: 'absolute', transform: ships[2].rot ? 'rotate(90deg) translate(0, -100%)' : 'rotate(0deg)', transformOrigin: 'top left', left: 3.8 + ships[2].tx * 7.7 + 'vh', top: 3.8 + ships[2].ty * 7.7 + 'vh' }}></img>
+                <img draggable={false} alt='' onMouseDown={(e) => MouseDown(e, 1)} src={p1} style={{ height: '5.3vh', position: 'absolute', transform: ships[1].rot ? 'rotate(90deg) translate(0, -100%)' : 'rotate(0deg)', transformOrigin: 'top left', left: 3.8 + ships[1].tx * 7.7 + 'vh', top: 3.8 + ships[1].ty * 7.7 + 'vh' }}></img>
+                <img draggable={false} alt='' onMouseDown={(e) => MouseDown(e, 0)} src={p1} style={{ height: '5.3vh', position: 'absolute', transform: ships[0].rot ? 'rotate(90deg) translate(0, -100%)' : 'rotate(0deg)', transformOrigin: 'top left', left: 3.8 + ships[0].tx * 7.7 + 'vh', top: 3.8 + ships[0].ty * 7.7 + 'vh' }}></img>
             </div>
 
         </header>
