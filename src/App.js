@@ -390,7 +390,7 @@ function FieldEdit() {
         return trt;
     })
     function MouseDown(e,i) {
-        setMos([e.screenX, e.screenY]);
+        setMos([e.clientX, e.clientY]);
         const ships = shipsRef.current;
         ships[i].px = ships[i].rqx;
         ships[i].py = ships[i].rqy;
@@ -400,17 +400,17 @@ function FieldEdit() {
         console.log()
         if (movinShip > -1) {
             const ships = shipsRef.current;
-            ships[movinShip].rqx = ships[movinShip].px + (e.screenX - mos[0]) / (window.innerHeight*0.077);
-            ships[movinShip].rqy = ships[movinShip].py + (e.screenY - mos[1]) / (window.innerHeight*0.077);
-            console.log((e.screenX - mos[0]) / (window.innerHeight * 0.077));
+            ships[movinShip].rqx = ships[movinShip].px + (e.clientX - mos[0]) / (window.innerHeight*0.077);
+            ships[movinShip].rqy = ships[movinShip].py + (e.clientY - mos[1]) / (window.innerHeight*0.077);
+            //console.log((e.clientX - mos[0]) / (window.innerHeight * 0.077));
             //console.log(ships[movinShip].rqy,movinShip);
         }
     }
     function MouseUp(e) {
         if (movinShip > -1) {
             const ships = shipsRef.current;
-            ships[movinShip].rqx = Math.round(ships[movinShip].px + (e.screenX - mos[0]) / (window.innerHeight * 0.077));
-            ships[movinShip].rqy = Math.round(ships[movinShip].py + (e.screenY - mos[1]) / (window.innerHeight * 0.077));
+            ships[movinShip].rqx = Math.round(ships[movinShip].px + (e.clientX - mos[0]) / (window.innerHeight * 0.077));
+            ships[movinShip].rqy = Math.round(ships[movinShip].py + (e.clientY - mos[1]) / (window.innerHeight * 0.077));
             //let qbob = ships[movinShip].rqx//scrtogrid(ships[movinShip].rqx);
             //let bbob = ships[movinShip].rqy//scrtogrid(ships[movinShip].rqy);
             //ships[movinShip].rqx = qbob//gridtoscr(qbob);
@@ -420,11 +420,37 @@ function FieldEdit() {
             //        if (field[y][x] == 1) field[y][x] = 0;
             //    }
             //переделать под проверку поля всего
-            if (mos[0] === e.screenX && mos[1] === e.screenY) {
-                if (ships[movinShip].rot === 0)
+            if (mos[0] === e.clientX && mos[1] === e.clientY) {
+                
+                
+                let qx = Math.round(((e.clientX - window.innerWidth) / (window.innerHeight) + 1.484) / 0.077);
+                let qy = Math.round(((e.clientY) / (window.innerHeight) - 0.154) / 0.077);
+                //if (elemBelow && elemBelow.dataset && elemBelow.dataset.cellx !== undefined) {
+                    
+                //}
+                
+                if (ships[movinShip].rot === 0) {
                     ships[movinShip].rot = 1;
-                else
+                    ships[movinShip].px = qx;
+                    ships[movinShip].py = ships[movinShip].rqy + (ships[movinShip].rqx - qx);
+                    ships[movinShip].tx = qx;
+                    ships[movinShip].ty = ships[movinShip].rqy + (ships[movinShip].rqx - qx);
+                    console.log(ships[movinShip].rqy + (ships[movinShip].rqx - qx), ships[movinShip].ty);
+                    ships[movinShip].rqy = ships[movinShip].ty;
+                    ships[movinShip].rqx = ships[movinShip].tx;
+                    console.log(ships[movinShip].rqy);
+                    
+                }
+                else {
                     ships[movinShip].rot = 0;
+                    ships[movinShip].px = ships[movinShip].rqx - (ships[movinShip].rqy+ships[movinShip].len-1 - qy);;
+                    ships[movinShip].py = qy
+                    ships[movinShip].tx = ships[movinShip].rqx - (ships[movinShip].rqy + ships[movinShip].len - 1 - qy);
+                    ships[movinShip].ty = qy;
+                    ships[movinShip].rqx = ships[movinShip].tx;
+                    ships[movinShip].rqy = ships[movinShip].ty;
+                }
+                    
             }
             //переделать под проверку поля всего
             //if (bbob >= 0 && bbob < 10 && qbob >= 0 && qbob < 10)
@@ -457,12 +483,13 @@ function FieldEdit() {
     const render = (time) => {
         // Вызывается каждый кадр (60 Гц ≈ каждые 16.6 мс)
         const deltaTime = time - lastFrameTime.current;
+        //console.log(time - lastFrameTime.current);
         lastFrameTime.current = time;
         for (let i = 0; i < ships.length; i++) {
 
             const ships = shipsRef.current;
-            ships[i].tx += (ships[i].rqx - ships[i].tx) * 0.1;
-            ships[i].ty += (ships[i].rqy - ships[i].ty) * 0.1;
+            ships[i].tx += (ships[i].rqx - ships[i].tx) * deltaTime/100;
+            ships[i].ty += (ships[i].rqy - ships[i].ty) * deltaTime / 100;
             
         }
         setTick(t => t + 1); // заставляем React перерисоваться
@@ -582,33 +609,40 @@ function FieldEdit() {
         },
     ])
     const ships = shipsRef.current;
+    function TapRotHandle(x,y) {
+        //console.log(x, y);
+    }
     return (
         <header className="App-header" onMouseUp={(e) => MouseUp(e)} onMouseMove={(e) => MouseMove(e)}>
             <div className="bckgr"></div>
             <div className="fieldEditBigTab">
                 {grid.map(el =>
-                    <div key= {el.id} style={{
-                        
+                    <div key={el.id}
+                        data-cellx={el.x}
+                        data-celly={el.y}
+
+                        style={{
+
                         position: 'absolute',
-                        left: el.x*7.7 + 3+'vh',
-                        top: el.y*7.7 + 3 + 'vh',
+                        left: el.x * 7.7 + 3 + 'vh',
+                        top: el.y * 7.7 + 3 + 'vh',
                         width: '7vh',
                         height: '7vh',
                         backgroundColor: 'rgb(0,0,0,0.5)',
-                        borderRadius:'1vh'
-                    }}></div>
+                        borderRadius: '1vh'
+                    }} onMouseUp={(x,y)=>TapRotHandle(el.x,el.y) }></div>
                 )
                 }
                 <label style={
                     {
                         position: 'absolute',
                         left: '85vh',
-                        top: '52vh',
+                        top: '46vh',
                     }
                 }>Расставить автоматически:</label>
-                <button className='fieldButt' style={{ top: '60vh' }}>Случайно</button>
-                <button className='fieldButt' style={{ top: '67vh' }}>Береговой метод</button>
-                <button className='fieldButt' style={{ top: '74vh' }}>Ассиметричный метод</button>
+                <button className='fieldButt' style={{ top: '54vh' }}>Случайно</button>
+                <button className='fieldButt' style={{ top: '61vh' }}>Береговой метод</button>
+                <button className='fieldButt' style={{ top: '68vh' }}>Ассиметричный метод</button>
                 <img draggable={false} alt='' onMouseDown={(e) => MouseDown(e, 9)} src={p4} style={{ height: '5.3vh', position: 'absolute', transform: ships[9].rot ? 'rotate(90deg) translate(0, -100%)' : 'rotate(0deg)', transformOrigin: 'top left', left: 3.8 + ships[9].tx * 7.7 + 'vh', top: 3.8 + ships[9].ty * 7.7 + 'vh' }}></img>
                 <img draggable={false} alt='' onMouseDown={(e) => MouseDown(e, 8)} src={p3} style={{ height: '5.3vh', position: 'absolute', transform: ships[8].rot ? 'rotate(90deg) translate(0, -100%)' : 'rotate(0deg)', transformOrigin: 'top left', left: 3.8 + ships[8].tx * 7.7 + 'vh', top: 3.8 + ships[8].ty * 7.7 + 'vh' }}></img>
                 <img draggable={false} alt='' onMouseDown={(e) => MouseDown(e, 7)} src={p3} style={{ height: '5.3vh', position: 'absolute', transform: ships[7].rot ? 'rotate(90deg) translate(0, -100%)' : 'rotate(0deg)', transformOrigin: 'top left', left: 3.8 + ships[7].tx * 7.7 + 'vh', top: 3.8 + ships[7].ty * 7.7 + 'vh' }}></img>
@@ -619,6 +653,8 @@ function FieldEdit() {
                 <img draggable={false} alt='' onMouseDown={(e) => MouseDown(e, 2)} src={p1} style={{ height: '5.3vh', position: 'absolute', transform: ships[2].rot ? 'rotate(90deg) translate(0, -100%)' : 'rotate(0deg)', transformOrigin: 'top left', left: 3.8 + ships[2].tx * 7.7 + 'vh', top: 3.8 + ships[2].ty * 7.7 + 'vh' }}></img>
                 <img draggable={false} alt='' onMouseDown={(e) => MouseDown(e, 1)} src={p1} style={{ height: '5.3vh', position: 'absolute', transform: ships[1].rot ? 'rotate(90deg) translate(0, -100%)' : 'rotate(0deg)', transformOrigin: 'top left', left: 3.8 + ships[1].tx * 7.7 + 'vh', top: 3.8 + ships[1].ty * 7.7 + 'vh' }}></img>
                 <img draggable={false} alt='' onMouseDown={(e) => MouseDown(e, 0)} src={p1} style={{ height: '5.3vh', position: 'absolute', transform: ships[0].rot ? 'rotate(90deg) translate(0, -100%)' : 'rotate(0deg)', transformOrigin: 'top left', left: 3.8 + ships[0].tx * 7.7 + 'vh', top: 3.8 + ships[0].ty * 7.7 + 'vh' }}></img>
+                <button onClick={handleClick} className="partbutton">Играть
+                </button>
             </div>
 
         </header>

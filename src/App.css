@@ -382,10 +382,20 @@ button {
 .fieldButt {
     position: absolute;
     left: 85vh;
-    top: 10vh;
+    top: 75vh;
     width: 50vh;
     height: 5vh;
     font-size: 4vh;
     color: black;
     background-color: white
+}
+.partbutton {
+    position: absolute;
+    top: 77vh;
+    left: calc(50% + 35vh);
+    width: 40vh;
+    height: 5vh;
+    padding: 0 2vh;
+    transform: translate(-50%, -50%);
+    font-size: 2vh;
 }
