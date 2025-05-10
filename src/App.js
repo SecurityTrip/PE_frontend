@@ -389,6 +389,8 @@ function FieldEdit() {
                 
         return trt;
     })
+    const redFlagsRef = useRef(Array(100).fill({x:0,y:0,a:0}));
+    const redFlags = redFlagsRef.current;
     function MouseDown(e,i) {
         setMos([e.clientX, e.clientY]);
         const ships = shipsRef.current;
@@ -397,7 +399,7 @@ function FieldEdit() {
         setMS(i);
     }
     function MouseMove(e) {
-        console.log()
+        //console.log()
         if (movinShip > -1) {
             const ships = shipsRef.current;
             ships[movinShip].rqx = ships[movinShip].px + (e.clientX - mos[0]) / (window.innerHeight*0.077);
@@ -409,16 +411,17 @@ function FieldEdit() {
     function MouseUp(e) {
         if (movinShip > -1) {
             const ships = shipsRef.current;
+            const field = fieldRef.current;
             ships[movinShip].rqx = Math.round(ships[movinShip].px + (e.clientX - mos[0]) / (window.innerHeight * 0.077));
             ships[movinShip].rqy = Math.round(ships[movinShip].py + (e.clientY - mos[1]) / (window.innerHeight * 0.077));
-            //let qbob = ships[movinShip].rqx//scrtogrid(ships[movinShip].rqx);
-            //let bbob = ships[movinShip].rqy//scrtogrid(ships[movinShip].rqy);
+            
             //ships[movinShip].rqx = qbob//gridtoscr(qbob);
             //ships[movinShip].rqy = bbob//gridtoscr(bbob);
-            //for (let y = 0; y < 10; y++)
-            //    for (let x = 0; x < 10; x++) {
-            //        if (field[y][x] == 1) field[y][x] = 0;
-            //    }
+            for (let y = 0; y < 10; y++)
+                for (let x = 0; x < 10; x++) {
+                    //console.log(x, y, field[y][x]);
+                    field[y][x] = -1;
+                }
             //переделать под проверку поля всего
             if (mos[0] === e.clientX && mos[1] === e.clientY) {
                 
@@ -435,10 +438,10 @@ function FieldEdit() {
                     ships[movinShip].py = ships[movinShip].rqy + (ships[movinShip].rqx - qx);
                     ships[movinShip].tx = qx;
                     ships[movinShip].ty = ships[movinShip].rqy + (ships[movinShip].rqx - qx);
-                    console.log(ships[movinShip].rqy + (ships[movinShip].rqx - qx), ships[movinShip].ty);
+                    //console.log(ships[movinShip].rqy + (ships[movinShip].rqx - qx), ships[movinShip].ty);
                     ships[movinShip].rqy = ships[movinShip].ty;
                     ships[movinShip].rqx = ships[movinShip].tx;
-                    console.log(ships[movinShip].rqy);
+                    //console.log(ships[movinShip].rqy);
                     
                 }
                 else {
@@ -452,26 +455,103 @@ function FieldEdit() {
                 }
                     
             }
-            //переделать под проверку поля всего
-            //if (bbob >= 0 && bbob < 10 && qbob >= 0 && qbob < 10)
-            //    field[bbob][qbob] = 1;
-            //if (ships[imove].rot == 0) {
-            //    if (bbob >= 0 && bbob < 10 && qbob+1 >= 0 && qbob+1 < 10)
-            //        field[bbob][qbob + 1] = 1;
-            //    if (bbob >= 0 && bbob < 10 && qbob+2 >= 0 && qbob+2 < 10)
-            //        field[bbob][qbob + 2] = 1;
-            //    if (bbob >= 0 && bbob < 10 && qbob+3 >= 0 && qbob+3 < 10)
-            //    field[bbob][qbob + 3] = 1;
-            //}
-            //else {
-            //    if (bbob+1 >= 0 && bbob+1 < 10 && qbob >= 0 && qbob < 10)
-            //        field[bbob + 1][qbob] = 1;
-            //    if (bbob+2 >= 0 && bbob+2 < 10 && qbob >= 0 && qbob < 10)
-            //        field[bbob + 2][qbob] = 1;
-            //    if (bbob+3 >= 0 && bbob+3 < 10 && qbob >= 0 && qbob < 10)
-            //    field[bbob + 3][qbob] = 1;
-            //}
-
+            for (let i = 0; i < 10; i++) {
+                let qbob = ships[i].rqx//scrtogrid(ships[movinShip].rqx);
+                let bbob = ships[i].rqy//scrtogrid(ships[movinShip].rqy);
+                //переделать под проверку поля всего
+                if (bbob >= 0 && bbob < 10 && qbob >= 0 && qbob < 10) {
+                    if (field[bbob][qbob]===-1)
+                        field[bbob][qbob] = i;
+                    else
+                        field[bbob][qbob] = 10;
+                }
+                if (ships[i].rot === 0) {
+                    if (bbob >= 0 && bbob < 10 && qbob + 1 >= 0 && qbob + 1 < 10 && ships[i].len>1) {
+                        if (field[bbob][qbob+1] === -1)
+                            field[bbob][qbob + 1] = i;
+                        else
+                            field[bbob][qbob+1] = 10;
+                    }
+                    if (bbob >= 0 && bbob < 10 && qbob + 2 >= 0 && qbob + 2 < 10 && ships[i].len > 2) {
+                        if (field[bbob][qbob+2] === -1)
+                            field[bbob][qbob + 2] = i;
+                        else
+                            field[bbob][qbob+2] = 10;
+                    }
+                    if (bbob >= 0 && bbob < 10 && qbob + 3 >= 0 && qbob + 3 < 10 && ships[i].len > 3) {
+                        if (field[bbob][qbob+3] === -1)
+                            field[bbob][qbob + 3] = i;
+                        else
+                            field[bbob][qbob+3] = 10;
+                    }
+                }
+                else {
+                    if (bbob + 1 >= 0 && bbob + 1 < 10 && qbob >= 0 && qbob < 10 && ships[i].len > 1) {
+                        if (field[bbob+1][qbob] === -1)
+                            field[bbob + 1][qbob] = i;
+                        else
+                            field[bbob+1][qbob] = 10;
+                    }
+                    if (bbob + 2 >= 0 && bbob + 2 < 10 && qbob >= 0 && qbob < 10 && ships[i].len > 2) {
+                        if (field[bbob+2][qbob] === -1)
+                            field[bbob + 2][qbob] = i;
+                        else
+                            field[bbob+2][qbob] = 10;
+                    }
+                    if (bbob + 3 >= 0 && bbob + 3 < 10 && qbob >= 0 && qbob < 10 && ships[i].len > 3) {
+                        if (field[bbob+3][qbob] === -1)
+                            field[bbob + 3][qbob] = i;
+                        else
+                            field[bbob+3][qbob] = 10;
+                    }
+                }
+            }
+            const redFlags = redFlagsRef.current;
+            
+            console.log(redFlags);
+            for (let y = 0; y < 10; y++)
+                for (let x = 0; x < 10; x++) {
+                    let red = false;
+                    if (field[y][x] !== -1) {
+                        if (y + 1 < 10) {
+                            if (x + 1 < 10) {
+                                if (field[y + 1][x + 1] !== field[y][x] && field[y + 1][x + 1] !==-1)
+                                    red = true;
+                            }
+                            if (x - 1 >-1) {
+                                if (field[y + 1][x - 1] !== field[y][x] && field[y + 1][x - 1] !== -1)
+                                    red = true;
+                            }
+                            if (field[y + 1][x] !== field[y][x] && field[y + 1][x] !== -1)
+                                red = true;
+                        }
+                        if (x + 1 < 10) {
+                            if (field[y][x + 1] !== field[y][x] && field[y][x + 1] !== -1)
+                                red = true;
+                        }
+                        if (x - 1 > -1) {
+                            if (field[y][x - 1] !== field[y][x] && field[y][x - 1] !== -1)
+                                red = true;
+                        }
+                        if (y - 1 >-1) {
+                            if (x + 1 < 10) {
+                                if (field[y - 1][x + 1] !== field[y][x] && field[y - 1][x + 1] !== -1)
+                                    red = true;
+                            }
+                            if (x - 1 > -1) {
+                                if (field[y - 1][x - 1] !== field[y][x] && field[y - 1][x - 1] !== -1)
+                                    red = true;
+                            }
+                            if (field[y - 1][x] !== field[y][x] && field[y - 1][x] !== -1)
+                                red = true;
+                        }
+                    }
+                    
+                    if (field[y][x] === 10 || red)
+                        redFlags[y*10+x]={ x, y, a: 0.5 };
+                    else
+                        redFlags[y * 10 + x] = { x, y, a: 0 };
+                }
 
             setMos(null)
             setMS(-1);
@@ -609,6 +689,7 @@ function FieldEdit() {
         },
     ])
     const ships = shipsRef.current;
+    const fieldRef = useRef(Array(10).fill(null).map(() => Array(10).fill(-1)));
     function TapRotHandle(x,y) {
         //console.log(x, y);
     }
@@ -653,6 +734,22 @@ function FieldEdit() {
                 <img draggable={false} alt='' onMouseDown={(e) => MouseDown(e, 2)} src={p1} style={{ height: '5.3vh', position: 'absolute', transform: ships[2].rot ? 'rotate(90deg) translate(0, -100%)' : 'rotate(0deg)', transformOrigin: 'top left', left: 3.8 + ships[2].tx * 7.7 + 'vh', top: 3.8 + ships[2].ty * 7.7 + 'vh' }}></img>
                 <img draggable={false} alt='' onMouseDown={(e) => MouseDown(e, 1)} src={p1} style={{ height: '5.3vh', position: 'absolute', transform: ships[1].rot ? 'rotate(90deg) translate(0, -100%)' : 'rotate(0deg)', transformOrigin: 'top left', left: 3.8 + ships[1].tx * 7.7 + 'vh', top: 3.8 + ships[1].ty * 7.7 + 'vh' }}></img>
                 <img draggable={false} alt='' onMouseDown={(e) => MouseDown(e, 0)} src={p1} style={{ height: '5.3vh', position: 'absolute', transform: ships[0].rot ? 'rotate(90deg) translate(0, -100%)' : 'rotate(0deg)', transformOrigin: 'top left', left: 3.8 + ships[0].tx * 7.7 + 'vh', top: 3.8 + ships[0].ty * 7.7 + 'vh' }}></img>
+                {redFlags.map(el =>
+                    <div
+                        key={el.id }
+                        style={{
+
+                            position: 'absolute',
+                            left: el.x * 7.7 + 3 + 'vh',
+                            top: el.y * 7.7 + 3 + 'vh',
+                            width: '7vh',
+                            height: '7vh',
+                            backgroundColor: 'rgb(255,0,0,' + el.a + ')',
+                            pointerEvents:'none',
+                            
+                        }} ></div>
+                )
+                }
                 <button onClick={handleClick} className="partbutton">Играть
                 </button>
             </div>
