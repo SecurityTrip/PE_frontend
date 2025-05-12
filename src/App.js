@@ -422,17 +422,17 @@ function FieldEdit() {
                     //console.log(x, y, field[y][x]);
                     field[y][x] = -1;
                 }
-            //переделать под проверку поля всего
             if (mos[0] === e.clientX && mos[1] === e.clientY) {
                 
                 
-                let qx = Math.round(((e.clientX - window.innerWidth) / (window.innerHeight) + 1.484) / 0.077);
+                let qx = Math.round(((e.clientX - window.innerWidth/2) / (window.innerHeight) + 0.6355) / 0.077);
                 let qy = Math.round(((e.clientY) / (window.innerHeight) - 0.154) / 0.077);
                 //if (elemBelow && elemBelow.dataset && elemBelow.dataset.cellx !== undefined) {
-                    
+                //console.log(((e.clientX - window.innerWidth / 2) / (window.innerHeight) + 0.6355) / 0.077,qx);
                 //}
                 
                 if (ships[movinShip].rot === 0) {
+                    console.log(qx);
                     ships[movinShip].rot = 1;
                     ships[movinShip].px = qx;
                     ships[movinShip].py = ships[movinShip].rqy + (ships[movinShip].rqx - qx);
@@ -440,7 +440,7 @@ function FieldEdit() {
                     ships[movinShip].ty = ships[movinShip].rqy + (ships[movinShip].rqx - qx);
                     //console.log(ships[movinShip].rqy + (ships[movinShip].rqx - qx), ships[movinShip].ty);
                     ships[movinShip].rqy = ships[movinShip].ty;
-                    ships[movinShip].rqx = ships[movinShip].tx;
+                    ships[movinShip].rqx = qx;
                     //console.log(ships[movinShip].rqy);
                     
                 }
@@ -508,7 +508,7 @@ function FieldEdit() {
             }
             const redFlags = redFlagsRef.current;
             
-            console.log(redFlags);
+            //console.log(redFlags);
             for (let y = 0; y < 10; y++)
                 for (let x = 0; x < 10; x++) {
                     let red = false;
@@ -588,101 +588,101 @@ function FieldEdit() {
     }
     const shipsRef = useRef([
         {
-            px: 3,
+            px: 13,
             py: 3,
-            rqx: 3,
+            rqx: 13,
             rqy: 3,
-            tx: 3,
+            tx: 13,
             ty: 3,
             len: 1,
             rot: 0
         },
         {
-            px: 2,
+            px: 12,
             py: 3,
-            rqx: 2,
+            rqx: 12,
             rqy: 3,
-            tx: 2,
+            tx: 12,
             ty: 3,
             len: 1,
             rot: 0
         },
         {
-            px: 1,
+            px: 11,
             py: 3,
-            rqx: 1,
+            rqx: 11,
             rqy: 3,
-            tx: 1,
+            tx: 11,
             ty: 3,
             len: 1,
             rot: 0
         },
         {
-            px: 0,
+            px: 10,
             py: 3,
-            rqx: 0,
+            rqx: 10,
             rqy: 3,
-            tx: 0,
+            tx: 10,
             ty: 3,
             len: 1,
             rot: 0
         },
         {
-            px: 4,
+            px: 14,
             py: 2,
-            rqx: 4,
+            rqx: 14,
             rqy: 2,
-            tx: 4,
+            tx: 14,
             ty: 2,
             len: 2,
             rot: 0
         },
         {
-            px: 2,
+            px: 12,
             py: 2,
-            rqx: 2,
+            rqx: 12,
             rqy: 2,
-            tx: 2,
+            tx: 12,
             ty: 2,
             len: 2,
             rot: 0
         },
         {
-            px: 0,
+            px: 10,
             py: 2,
-            rqx: 0,
+            rqx: 10,
             rqy: 2,
-            tx: 0,
+            tx: 10,
             ty: 2,
             len: 2,
             rot: 0
         },
         {
-            px: 3,
+            px: 13,
             py: 1,
-            rqx: 3,
+            rqx: 13,
             rqy: 1,
-            tx: 3,
+            tx: 13,
             ty: 1,
             len: 3,
             rot: 0
         },
         {
-            px: 0,
+            px: 10,
             py: 1,
-            rqx: 0,
+            rqx: 10,
             rqy: 1,
-            tx: 0,
+            tx: 10,
             ty: 1,
             len: 3,
             rot: 0
         },
         {
-            px: 0,
+            px: 10,
             py: 0,
-            rqx: 0,
+            rqx: 10,
             rqy: 0,
-            tx: 0,
+            tx: 10,
             ty: 0,
             len: 4,
             rot: 0
