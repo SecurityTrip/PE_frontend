@@ -32,6 +32,7 @@ function App() {
                     <Route path="/about" element={<About />} />
                     <Route path="/system" element={<System />} />
                     <Route path="/fieldedit" element={<FieldEdit />} />
+                    <Route path="/match" element={<MatchScreen />} />
                 </Routes>
             </div>
         </Router>
@@ -204,7 +205,12 @@ function Singleplayer() {
     const handleClick = (index) => {
         setSelected(index);
     };
-    const playClick = (index) => {
+    const playClick = () => {
+        // Сохраняем выбранную сложность в localStorage
+        let diff = 'EASY';
+        if (selected === 1) diff = 'MEDIUM';
+        if (selected === 2) diff = 'HARD';
+        localStorage.setItem('singleplayer_difficulty', diff);
         navigate('/fieldedit');
     };
 
@@ -396,6 +402,7 @@ function MenuComponent({ selctdMenu, children }) {
                 <label onClick={Ruls}>Правила игры</label ><br />
                 <label onClick={AbAuth}>Об авторах</label ><br />
                 <label onClick={Syst}>О системе</label ><br />
+                <label onClick={() => { localStorage.clear(); navigate('/'); }} style={{ color: 'red', cursor: 'pointer' }}>Выйти</label><br />
             </div>
             <SelectedMenu y={selctdMenu}></SelectedMenu>
             <div className="menuBigTab">{children}</div>
@@ -405,11 +412,8 @@ function MenuComponent({ selctdMenu, children }) {
 function FieldEdit() {
     const navigate = useNavigate();
     const [movinShip, setMS] = useState(-1);
-    function handleClick() {
-        navigate('/match');
-    }
     const [mos, setMos] = useState(null);
-
+    const [autoError, setAutoError] = useState('');
     const grid = useMemo(() => {
         let trt = []
         let id = 0;
@@ -418,7 +422,6 @@ function FieldEdit() {
                 trt.push({ id, x, y });
                 id++;
             }
-                
         return trt;
     })
     const redFlagsRef = useRef(Array(100).fill({x:0,y:0,a:0}));
@@ -725,6 +728,90 @@ function FieldEdit() {
     function TapRotHandle(x,y) {
         //console.log(x, y);
     }
+    async function handleClick() {
+        // Собираем корабли
+        const ships = shipsRef.current;
+        const shipsData = ships.map(ship => ({
+            size: ship.len,
+            x: Math.round(ship.rqx),
+            y: Math.round(ship.rqy),
+            horizontal: ship.rot === 0
+        }));
+        // Валидация: все корабли на поле и не пересекаются (можно доработать)
+        // ... (добавьте свою валидацию при необходимости)
+        // Получаем сложность
+        const difficultyLevel = localStorage.getItem('singleplayer_difficulty') || 'MEDIUM';
+        // Отправляем POST-запрос
+        try {
+            const response = await authorizedFetch('http://localhost:8080/game/singleplayer', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    ships: shipsData,
+                    difficultyLevel
+                })
+            });
+            if (response.ok) {
+                const data = await response.json();
+                // Сохраняем gameId для дальнейшей работы
+                localStorage.setItem('singleplayer_gameId', data.id);
+                // Переходим к экрану матча (реализуйте подключение к WebSocket там)
+                navigate('/match');
+            } else {
+                alert('Ошибка создания игры: ' + response.status);
+            }
+        } catch (e) {
+            alert('Ошибка соединения с сервером');
+        }
+    }
+    // --- ДОБАВЛЕНО: автоматическая расстановка ---
+    async function handleAutoPlace(strategy) {
+        setAutoError('');
+        try {
+            const response = await authorizedFetch(`http://localhost:8080/game/generate-ships/${strategy}`);
+            if (response.ok) {
+                const data = await response.json();
+                // data - массив кораблей [{size, x, y, horizontal}]
+                if (Array.isArray(data)) {
+                    for (let i = 0; i < ships.length; i++) {
+                        if (data[i]) {
+                            ships[i].rqx = ships[i].tx = ships[i].px = data[i].x;
+                            ships[i].rqy = ships[i].ty = ships[i].py = data[i].y;
+                            ships[i].len = data[i].size;
+                            ships[i].rot = data[i].horizontal ? 0 : 1;
+                        }
+                    }
+                }
+            } else {
+                setAutoError('Ошибка генерации: ' + response.status);
+            }
+        } catch (e) {
+            setAutoError('Ошибка соединения с сервером');
+        }
+    }
+    // --- ДОБАВЛЕНО: автоматическая игра ---
+    async function handleAutoGame() {
+        setAutoError('');
+        const difficultyLevel = localStorage.getItem('singleplayer_difficulty') || 'MEDIUM';
+        try {
+            const response = await authorizedFetch('http://localhost:8080/game/singleplayer/auto', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ difficultyLevel })
+            });
+            if (response.ok) {
+                const data = await response.json();
+                localStorage.setItem('singleplayer_gameId', data.id);
+                navigate('/match');
+            } else {
+                setAutoError('Ошибка создания авто-игры: ' + response.status);
+            }
+        } catch (e) {
+            setAutoError('Ошибка соединения с сервером');
+        }
+    }
     return (
         <header className="App-header" onMouseUp={(e) => MouseUp(e)} onMouseMove={(e) => MouseMove(e)}>
             <div className="bckgr"></div>
@@ -733,9 +820,7 @@ function FieldEdit() {
                     <div key={el.id}
                         data-cellx={el.x}
                         data-celly={el.y}
-
                         style={{
-
                         position: 'absolute',
                         left: el.x * 7.7 + 3 + 'vh',
                         top: el.y * 7.7 + 3 + 'vh',
@@ -744,18 +829,13 @@ function FieldEdit() {
                         backgroundColor: 'rgb(0,0,0,0.5)',
                         borderRadius: '1vh'
                     }} onMouseUp={(x,y)=>TapRotHandle(el.x,el.y) }></div>
-                )
-                }
-                <label style={
-                    {
-                        position: 'absolute',
-                        left: '85vh',
-                        top: '46vh',
-                    }
-                }>Расставить автоматически:</label>
-                <button className='fieldButt' style={{ top: '54vh' }}>Случайно</button>
-                <button className='fieldButt' style={{ top: '61vh' }}>Береговой метод</button>
-                <button className='fieldButt' style={{ top: '68vh' }}>Ассиметричный метод</button>
+                )}
+                <label style={{ position: 'absolute', left: '85vh', top: '46vh' }}>Расставить автоматически:</label>
+                <button className='fieldButt' style={{ top: '54vh' }} onClick={() => handleAutoPlace('RANDOM')}>Случайно</button>
+                <button className='fieldButt' style={{ top: '61vh' }} onClick={() => handleAutoPlace('SHORE')}>Береговой метод</button>
+                <button className='fieldButt' style={{ top: '68vh' }} onClick={() => handleAutoPlace('ASYMMETRIC')}>Ассиметричный метод</button>
+                <button className='fieldButt' style={{ top: '75vh', background: '#4caf50', color: 'white' }} onClick={handleAutoGame}>Играть автоматически</button>
+                {autoError && <div style={{ color: 'red', position: 'absolute', left: '85vh', top: '80vh' }}>{autoError}</div>}
                 <img draggable={false} alt='' onMouseDown={(e) => MouseDown(e, 9)} src={p4} style={{ height: '5.3vh', position: 'absolute', transform: ships[9].rot ? 'rotate(90deg) translate(0, -100%)' : 'rotate(0deg)', transformOrigin: 'top left', left: 3.8 + ships[9].tx * 7.7 + 'vh', top: 3.8 + ships[9].ty * 7.7 + 'vh' }}></img>
                 <img draggable={false} alt='' onMouseDown={(e) => MouseDown(e, 8)} src={p3} style={{ height: '5.3vh', position: 'absolute', transform: ships[8].rot ? 'rotate(90deg) translate(0, -100%)' : 'rotate(0deg)', transformOrigin: 'top left', left: 3.8 + ships[8].tx * 7.7 + 'vh', top: 3.8 + ships[8].ty * 7.7 + 'vh' }}></img>
                 <img draggable={false} alt='' onMouseDown={(e) => MouseDown(e, 7)} src={p3} style={{ height: '5.3vh', position: 'absolute', transform: ships[7].rot ? 'rotate(90deg) translate(0, -100%)' : 'rotate(0deg)', transformOrigin: 'top left', left: 3.8 + ships[7].tx * 7.7 + 'vh', top: 3.8 + ships[7].ty * 7.7 + 'vh' }}></img>
@@ -788,6 +868,130 @@ function FieldEdit() {
 
         </header>
     );
+}
+function MatchScreen() {
+    const navigate = useNavigate();
+    const [game, setGame] = useState(null);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState('');
+    const [moveError, setMoveError] = useState('');
+    const [moveResult, setMoveResult] = useState(null);
+    const gameId = localStorage.getItem('singleplayer_gameId');
+
+    // Загрузка состояния игры
+    async function fetchGame() {
+        setLoading(true);
+        setError('');
+        try {
+            const response = await authorizedFetch(`http://localhost:8080/game/${gameId}`);
+            if (response.ok) {
+                const data = await response.json();
+                setGame(data);
+            } else {
+                setError('Ошибка загрузки игры: ' + response.status);
+            }
+        } catch (e) {
+            setError('Ошибка соединения с сервером');
+        }
+        setLoading(false);
+    }
+    useEffect(() => {
+        if (gameId) fetchGame();
+        // eslint-disable-next-line
+    }, [gameId]);
+
+    // Старт игры
+    async function handleStart() {
+        setError('');
+        try {
+            const response = await authorizedFetch(`http://localhost:8080/game/start/${gameId}`, { method: 'POST' });
+            if (response.ok) {
+                await fetchGame();
+            } else {
+                setError('Ошибка старта игры: ' + response.status);
+            }
+        } catch (e) {
+            setError('Ошибка соединения с сервером');
+        }
+    }
+
+    // Ход игрока
+    async function handleCellClick(x, y) {
+        setMoveError('');
+        setMoveResult(null);
+        try {
+            const response = await authorizedFetch('http://localhost:8080/game/move', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ gameId: Number(gameId), x, y })
+            });
+            if (response.ok) {
+                const data = await response.json();
+                setMoveResult(data);
+                setGame(data.gameState);
+            } else {
+                if (response.status === 400) setMoveError('Некорректный ход или не ваша очередь');
+                else if (response.status === 404) setMoveError('Игра не найдена');
+                else if (response.status === 401) setMoveError('Не авторизован');
+                else setMoveError('Ошибка хода: ' + response.status);
+            }
+        } catch (e) {
+            setMoveError('Ошибка соединения с сервером');
+        }
+    }
+
+    if (!gameId) return <div style={{color:'white'}}>Нет активной игры. <button onClick={()=>navigate('/singleplayer')}>На главную</button></div>;
+    if (loading) return <div style={{color:'white'}}>Загрузка...</div>;
+    if (error) return <div style={{color:'red'}}>{error}</div>;
+    if (!game) return <div style={{color:'white'}}>Нет данных об игре</div>;
+
+    // Рендер поля (10x10)
+    function renderBoard(board, isEnemy, onCellClick) {
+        return (
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(10,3vh)', gridTemplateRows: 'repeat(10,3vh)', gap: '0.2vh', margin: '1vh' }}>
+                {board.map((row, y) => row.map((cell, x) => {
+                    let bg = '#1e90ff';
+                    if (cell === 1 && !isEnemy) bg = '#444'; // корабль игрока
+                    if (cell === 2) bg = '#eee'; // промах
+                    if (cell === 3) bg = '#e53935'; // попадание
+                    return <div key={x+','+y} onClick={isEnemy && onCellClick ? ()=>onCellClick(x,y):undefined} style={{ width: '3vh', height: '3vh', background: bg, border: '1px solid #222', cursor: isEnemy && onCellClick ? 'pointer':'default' }}></div>;
+                }))}
+            </div>
+        );
+    }
+
+    return (
+        <header className="App-header">
+            <div className="bckgr"></div>
+            <div style={{ color: 'white', fontSize: '3vh', marginBottom: '2vh' }}>Игра #{game.id} — {game.gameState === 'WAITING' ? 'Ожидание старта' : game.gameState === 'IN_PROGRESS' ? 'В процессе' : game.gameState === 'PLAYER_WON' ? 'Вы выиграли!' : game.gameState === 'COMPUTER_WON' ? 'Компьютер выиграл' : game.gameState}</div>
+            {game.gameState === 'WAITING' && <button onClick={handleStart} className="partbutton">Стартовать игру</button>}
+            <div style={{ display: 'flex', flexDirection: 'row', justifyContent: 'center', gap: '8vh' }}>
+                <div>
+                    <div style={{ color: 'white', marginBottom: '1vh' }}>Ваше поле</div>
+                    {renderBoard(game.playerBoard.board, false)}
+                </div>
+                <div>
+                    <div style={{ color: 'white', marginBottom: '1vh' }}>Поле противника</div>
+                    {renderBoard(game.computerBoard.board, true, (x,y)=>{
+                        if (game.gameState==='IN_PROGRESS' && game.playerTurn) handleCellClick(x,y);
+                    })}
+                </div>
+            </div>
+            <div style={{ color: 'white', marginTop: '2vh' }}>Ход: {game.playerTurn ? 'Ваш' : 'Компьютера'}</div>
+            {moveResult && <div style={{ color: moveResult.hit ? 'green' : 'orange', marginTop: '1vh' }}>{moveResult.hit ? 'Попадание!' : 'Промах!'} {moveResult.sunk ? 'Корабль потоплен!' : ''} {moveResult.gameOver ? 'Игра окончена.' : ''}</div>}
+            {moveError && <div style={{ color: 'red', marginTop: '1vh' }}>{moveError}</div>}
+            <button onClick={()=>navigate('/singleplayer')} className="partbutton" style={{marginTop:'3vh'}}>Выйти в меню</button>
+        </header>
+    );
+}
+
+async function authorizedFetch(url, options = {}) {
+    const token = localStorage.getItem('token');
+    const headers = options.headers ? { ...options.headers } : {};
+    if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+    }
+    return fetch(url, { ...options, headers });
 }
 
 export default App;
