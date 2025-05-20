@@ -41,8 +41,35 @@ function Auth() {
     const navigate = useNavigate();
     const [login, setLogin] = useState('');
     const [pass, setPass] = useState('');
-    function handleClick() {
-        navigate('/singleplayer'); // Навигация на другую страницу
+    const [error, setError] = useState('');
+
+    async function handleClick() {
+        setError('');
+        try {
+            const response = await fetch('http://localhost:8080/auth/login', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    username: login,
+                    password: pass
+                })
+            });
+            if (response.ok) {
+                const data = await response.json();
+                localStorage.setItem('token', data.token);
+                localStorage.setItem('username', data.username);
+                localStorage.setItem('userId', data.userId);
+                localStorage.setItem('avatarId', data.avatarId);
+                localStorage.setItem('refreshToken', data.refreshToken);
+                navigate('/singleplayer');
+            } else {
+                setError('Неверный логин или пароль');
+            }
+        } catch (e) {
+            setError('Ошибка соединения с сервером');
+        }
     }
 
     return (
@@ -52,9 +79,10 @@ function Auth() {
             <img className="logo" src={logolabelimg} alt="Logo" />
             <div className="logintab">Авторизация</div>
             <div className="logintabdark">
-                <input onChange={(e) => setLogin(e.target.value)} type="text" placeholder="Логин" className="loginput" style={{ top: '11.5vh' } } />
-                <input onChange={(e) => setPass(e.target.value)} type="text" placeholder="Пароль" className="loginput" />
+                <input onChange={(e) => setLogin(e.target.value)} value={login} type="text" placeholder="Логин" className="loginput" style={{ top: '11.5vh' }} />
+                <input onChange={(e) => setPass(e.target.value)} value={pass} type="password" placeholder="Пароль" className="loginput" />
                 <button onClick={handleClick} className="logbutton">Войти</button>
+                {error && <div style={{ color: 'red', marginTop: '2vh' }}>{error}</div>}
             </div>
             <Link to="/regis" className="linkToReg">Зарегистрироваться</Link>
         </header>
@@ -69,70 +97,74 @@ function Regis() {
     const [login, setLogin] = useState('');
     const [pass, setPass] = useState('');
     const [passpass, setPassPass] = useState('');
-    function handleClick() {
-        navigate('/singleplayer'); // Навигация на другую страницу
+    const [error, setError] = useState('');
+    const [success, setSuccess] = useState('');
+
+    async function handleClick() {
+        setError('');
+        setSuccess('');
+        if (!login || !pass || !passpass) {
+            setError('Заполните все поля');
+            return;
+        }
+        if (pass !== passpass) {
+            setError('Пароли не совпадают');
+            return;
+        }
+        try {
+            const response = await fetch('http://localhost:8080/auth/register', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    username: login,
+                    password: pass,
+                    avatarId: iSeld
+                })
+            });
+            if (response.ok) {
+                const data = await response.json();
+                setSuccess(data.message || 'Регистрация успешна!');
+                setTimeout(() => navigate('/'), 1500);
+            } else {
+                const data = await response.json();
+                setError(data.message || 'Ошибка регистрации');
+            }
+        } catch (e) {
+            setError('Ошибка соединения с сервером');
+        }
     }
     function avaSelect(i) {
         setISeld(i);
         switch (i) {
-            case 0: {
-                setSelavx(-3.5); setSelavy(5.5);
-                break;
-            }
-            case 1: {
-                setSelavx(6.5); setSelavy(5.5);
-                break;
-            }
-            case 2: {
-                setSelavx(16.5); setSelavy(5.5);
-                break;
-            }
-            case 3: {
-                setSelavx(26.5); setSelavy(5.5);
-                break;
-            }
-            case 4: {
-                setSelavx(36.5); setSelavy(5.5);
-                break;
-            }
-            case 5: {
-                setSelavx(-3.5); setSelavy(15.5);
-                break;
-            }
-            case 6: {
-                setSelavx(6.5); setSelavy(15.5);
-                break;
-            }
-            case 7: {
-                setSelavx(16.5); setSelavy(15.5);
-                break;
-            }
-            case 8: {
-                setSelavx(26.5); setSelavy(15.5);
-                break;
-            }
-            case 9: {
-                setSelavx(36.5); setSelavy(15.5);
-                break;
-            }
-            default: {
-                alert('ничего себе');
-            }
+            case 0: { setSelavx(-3.5); setSelavy(5.5); break; }
+            case 1: { setSelavx(6.5); setSelavy(5.5); break; }
+            case 2: { setSelavx(16.5); setSelavy(5.5); break; }
+            case 3: { setSelavx(26.5); setSelavy(5.5); break; }
+            case 4: { setSelavx(36.5); setSelavy(5.5); break; }
+            case 5: { setSelavx(-3.5); setSelavy(15.5); break; }
+            case 6: { setSelavx(6.5); setSelavy(15.5); break; }
+            case 7: { setSelavx(16.5); setSelavy(15.5); break; }
+            case 8: { setSelavx(26.5); setSelavy(15.5); break; }
+            case 9: { setSelavx(36.5); setSelavy(15.5); break; }
+            default: { alert('ничего себе'); }
         }
     }
     
     return (
-
         <header>
             <div className="bckgr"></div>
             <img className="logo" src={logoimgimg} alt="Logo" />
             <img className="logo" src={logolabelimg} alt="Logo" />
             <div className="regtab">Регистрация</div>
             <div className="regtabdark">
-                <input onChange={(e) => setLogin(e.target.value)} type="text" placeholder="Логин" className="reginput" />
-                <input onChange={(e) => setPass(e.target.value)} type="text" placeholder="Пароль" className="reginput" style={{ top: '11.5vh' }} />
-                <input onChange={(e) => setPassPass(e.target.value)} type="text" placeholder="Повторите пароль" className="reginput" style={{ top: '18vh' }} />
+                <input onChange={(e) => setLogin(e.target.value)} value={login} type="text" placeholder="Логин" className="reginput" />
+                <input onChange={(e) => setPass(e.target.value)} value={pass} type="password" placeholder="Пароль" className="reginput" style={{ top: '11.5vh' }} />
+                <input onChange={(e) => setPassPass(e.target.value)} value={passpass} type="password" placeholder="Повторите пароль" className="reginput" style={{ top: '18vh' }} />
                 <button onClick={handleClick} className="regbutton">Зарегистрироваться</button>
+                {error && <div style={{ color: 'red', marginTop: '2vh' }}>{error}</div>}
+                {success && <div style={{ color: 'green', marginTop: '2vh' }}>{success}</div>}
                 <div style={{position: 'absolute',color: 'white',left: 'calc(50% + 4vh)',fontSize:'4vh'} }>Выберите аватар:</div>
                 <SelectedAva x={selavx} y={selavy}></SelectedAva>
                 <Avatimbut y='7' x='-2' img={avaimg0} onClick={() => { avaSelect(0) }} />
