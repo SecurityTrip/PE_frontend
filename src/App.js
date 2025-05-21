@@ -32,7 +32,7 @@ import ProfSet from './ProfSet';
 import Rules from './Rules';
 import About from './About';
 import System from './System';
-import SingleplayerMatchScreen from './SingleplayerMatchScreen';
+import SingleplayerMatchScreen from './components/SingleplayerMatchScreen';
 import MultiplayerMatchScreen from './MultiplayerMatchScreen';
 
 function App() {
@@ -428,8 +428,26 @@ function FieldEdit() {
             if (response.ok) {
                 const data = await response.json();
                 console.log('[FieldEdit] Игра создана:', data);
-                localStorage.setItem('singleplayer_gameId', data.id);
-                navigate('/singleplayer-match');
+
+                // ДОБАВЛЕНО: Запуск игры после создания
+                try {
+                    const startResponse = await authorizedFetch(`http://localhost:8080/game/start/${data.id}`, {
+                        method: 'POST'
+                    });
+
+                    if (startResponse.ok) {
+                        console.log('[FieldEdit] Игра успешно запущена');
+                        localStorage.setItem('singleplayer_gameId', data.id);
+                        navigate('/singleplayer-match');
+                    } else {
+                        const startErrorData = await startResponse.json().catch(() => ({}));
+                        setError(startErrorData.message || 'Ошибка запуска игры: ' + startResponse.status);
+                    }
+                } catch (startError) {
+                     console.error('[FieldEdit] Ошибка при запуске игры:', startError);
+                     setError('Ошибка соединения с сервером при запуске игры');
+                }
+
             } else {
                 const errorData = await response.json().catch(() => ({}));
                 setError(errorData.message || 'Ошибка создания игры: ' + response.status);
