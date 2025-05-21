@@ -23,10 +23,11 @@ function renderBoard(board, isEnemy, onCellClick, ships) {
     };
 
     return (
-        <div className="match-boards-container">
+        <div className="board-grid">
             {board.map((row, y) => row.map((cell, x) => {
                 let bg = 'rgba(30,144,255,0.5)'; // Цвет пустой клетки по умолчанию
                 let content = null; // Содержимое ячейки (например, для отображения попаданий/промахов)
+                let cellClass = 'board-cell'; // Базовый класс ячейки
                 
                 if (isEnemy) {
                     // Логика для поля противника
@@ -40,42 +41,66 @@ function renderBoard(board, isEnemy, onCellClick, ships) {
                     }
                 } else {
                     // Логика для поля игрока
-                    // cell === 1 означает, что здесь часть корабля
-                    if (cell === 1) bg = 'rgba(68,68,68,0.8)'; // корабль игрока (пока серый)
-                    if (cell === 2) {
-                        bg = 'rgba(238,238,238,0.8)'; // промах
-                         content = 'X'; // Маркер промаха
-                    }
-                    if (cell === 3) {
-                        bg = 'rgba(229,57,53,0.8)'; // попадание
-                         content = '●'; // Маркер попадания
-                    }
                     
-                    // Отображение кораблей игрока
+                    // Отображение кораблей игрока и их состояния
                     if (ships) {
+                        let isCurrentCellShip = false;
                         for (const ship of ships) {
                             if (isShipCell(x, y, ship)) {
-                                bg = 'rgba(255,193,7,0.8)'; // Желтый цвет для кораблей игрока (как на поле расстановки)
-                                
-                                // Если это попадание по кораблю игрока
-                                if (cell === 3) {
+                                isCurrentCellShip = true;
+                                cellClass += ' player-ship-cell'; // Добавляем класс для корабля игрока
+
+                                // Проверяем, подбита ли эта часть корабля
+                                // Нам нужно найти индекс части корабля
+                                let hitIndex = -1;
+                                for(let i = 0; i < ship.size; i++) {
+                                     const shipPartX = ship.horizontal ? ship.x + i : ship.x;
+                                     const shipPartY = ship.horizontal ? ship.y : ship.y + i;
+                                     if (shipPartX === x && shipPartY === y) {
+                                         hitIndex = i;
+                                         break;
+                                     }
+                                }
+
+                                if (hitIndex !== -1 && ship.hits && ship.hits[hitIndex]) {
                                      bg = 'rgba(229,57,53,0.8)'; // Красный цвет для попадания
                                      content = '●'; // Маркер попадания
+                                } else {
+                                     bg = 'rgba(255,193,7,0.8)'; // Желтый цвет для не подбитого корабля
                                 }
-                                break;
+
+                                break; // Нашли корабль, можно остановиться
                             }
                         }
+                         if (!isCurrentCellShip) { // Если это не корабль игрока, проверяем на промах
+                              if (cell === 2) {
+                                 bg = 'rgba(238,238,238,0.8)'; // промах
+                                 content = 'X'; // Маркер промаха
+                              }
+                         }
                     }
+                     // Если ships не загружен, используем старую логику (временно, пока не решим проблему загрузки)
+                     else {
+                          if (cell === 1) bg = 'rgba(68,68,68,0.8)'; // корабль игрока (пока серый)
+                           if (cell === 2) {
+                                bg = 'rgba(238,238,238,0.8)'; // промах
+                                content = 'X'; // Маркер промаха
+                           }
+                           if (cell === 3) {
+                                bg = 'rgba(229,57,53,0.8)'; // попадание
+                                content = '●'; // Маркер попадания
+                           }
+                     }
                 }
 
                 return (
                     <div
                         key={x+','+y}
                         onClick={isEnemy && onCellClick ? () => onCellClick(x,y) : undefined}
-                        className="board-cell"
+                        className={cellClass}
                         style={{
                             background: bg,
-                            cursor: isEnemy && onCellClick ? 'pointer' : 'default',
+                             cursor: isEnemy && onCellClick ? 'pointer' : 'default',
                         }}
                     >
                         {content}

@@ -1,0 +1,48 @@
+.match-boards-container {
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  gap: 5vh;
+}
+
+.match-board-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background-color: rgba(0, 0, 0, 0.8);
+  border-radius: 2vh;
+  padding: 2vh;
+}
+
+.board-grid {
+  display: grid;
+  grid-template-columns: repeat(10, 3.2vh);
+  grid-template-rows: repeat(10, 3.2vh);
+  gap: 0.1vh;
+}
+
+.board-cell {
+  width: 3.2vh;
+  height: 3.2vh;
+  background-color: rgba(30, 144, 255, 0.5);
+  border: 1px solid rgba(34, 34, 34, 0.5);
+  border-radius: 0.5vh;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.board-cell:hover {
+  background-color: rgba(30, 144, 255, 0.7);
+}
+
+.board-cell.hit {
+  background-color: rgba(229, 57, 53, 0.8);
+}
+
+.board-cell.miss {
+  background-color: rgba(33, 150, 243, 0.8);
+}
+
+.board-cell.player-ship-cell {
+  background-color: rgba(68, 68, 68, 0.8);
+} 
