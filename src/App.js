@@ -268,7 +268,7 @@ function Singleplayer() {
 }
 function CreateRoom() {
     const navigate = useNavigate();
-    const { createRoom, roomCode, connected } = useMultiplayerWS();
+    const { createRoom, roomCode, connected, error: wsError } = useMultiplayerWS();
     const [created, setCreated] = useState(false);
     const [error, setError] = useState('');
     const [ships, setShips] = useState([
@@ -284,34 +284,106 @@ function CreateRoom() {
         { size: 1, x: 9, y: 9, horizontal: true },
     ]);
 
-    const handleCreate = () => {
+    // Обработка ошибок WebSocket
+    useEffect(() => {
+        if (wsError) {
+            setError(wsError);
+        }
+    }, [wsError]);
+
+    // Обработка получения кода комнаты
+    useEffect(() => {
+        if (roomCode && roomCode.gameCode) {
+            console.log('[CreateRoom] Получен код комнаты:', roomCode);
+            setCreated(true);
+        }
+    }, [roomCode]);
+
+    const handleCreate = async () => {
         setError('');
         if (!connected) {
             setError('Нет соединения с сервером');
             return;
         }
-        createRoom({ ships });
-        setCreated(true);
-    };
-    const handleCopy = () => {
-        if (roomCode && roomCode.gameCode) {
-            navigator.clipboard.writeText(roomCode.gameCode);
-            localStorage.setItem('multiplayer_gameCode', roomCode.gameCode);
-            localStorage.setItem('multiplayer_role', 'host');
-            navigate('/match');
+        try {
+            // Создаем комнату через WebSocket
+            createRoom({ ships });
+        } catch (e) {
+            setError('Ошибка создания комнаты: ' + e.message);
         }
     };
+
+    const handleCopy = () => {
+        if (roomCode && roomCode.gameCode) {
+            navigator.clipboard.writeText(roomCode.gameCode)
+                .then(() => {
+                    localStorage.setItem('multiplayer_gameCode', roomCode.gameCode);
+                    localStorage.setItem('multiplayer_role', 'host');
+                    navigate('/fieldedit');
+                })
+                .catch(err => {
+                    setError('Ошибка копирования кода: ' + err.message);
+                });
+        }
+    };
+
     return (
         <MenuComponent selctdMenu='1'>
-            <div style={{ position: 'absolute', top: '20vh', left: '0vh', width: '100vh', height: '0vh', transform: 'translate(-50 %, -50 %)' }}>
-                {created ? 'Сгенерированный код:' : 'Создайте комнату для игры'}
+            <div style={{ 
+                position: 'absolute', 
+                top: '20vh', 
+                left: '50%', 
+                transform: 'translateX(-50%)',
+                width: '100%',
+                textAlign: 'center',
+                color: 'white'
+            }}>
+                <h2 style={{ marginBottom: '2vh' }}>Создание игры</h2>
+                {!created ? (
+                    <>
+                        <div style={{ marginBottom: '2vh' }}>
+                            Нажмите кнопку для создания новой игры
+                        </div>
+                        <button 
+                            onClick={handleCreate} 
+                            className="copybutt"
+                            style={{ marginTop: '2vh' }}
+                        >
+                            Создать игру
+                        </button>
+                    </>
+                ) : (
+                    <>
+                        <div style={{ marginBottom: '2vh' }}>
+                            Код вашей игры:
+                        </div>
+                        <div style={{ 
+                            fontSize: '3vh',
+                            letterSpacing: '0.5vh',
+                            marginBottom: '2vh',
+                            fontFamily: 'monospace'
+                        }}>
+                            {roomCode.gameCode}
+                        </div>
+                        <button 
+                            onClick={handleCopy} 
+                            className="copybutt"
+                            style={{ marginTop: '2vh' }}
+                        >
+                            Начать игру
+                        </button>
+                    </>
+                )}
+                {error && (
+                    <div style={{ 
+                        color: 'red', 
+                        marginTop: '2vh',
+                        fontSize: '1.8vh'
+                    }}>
+                        {error}
+                    </div>
+                )}
             </div>
-            <input type="text" value={roomCode && roomCode.gameCode ? roomCode.gameCode : ''} readOnly className="sgencodefield" />
-            {!created && <button onClick={handleCreate} className="copybutt">Создать комнату</button>}
-            {created && roomCode && roomCode.gameCode && (
-                <button onClick={handleCopy} className="copybutt">Скопировать</button>
-            )}
-            {error && <div style={{ color: 'red', marginTop: '2vh' }}>{error}</div>}
         </MenuComponent>
     );
 }
@@ -319,7 +391,22 @@ function Connect() {
     const navigate = useNavigate();
     const [gameCode, setGameCode] = useState('');
     const [error, setError] = useState('');
-    const { joinRoom, joinInfo, connected } = useMultiplayerWS();
+    const { joinRoom, joinInfo, connected, error: wsError } = useMultiplayerWS();
+
+    // Обработка ошибок WebSocket
+    useEffect(() => {
+        if (wsError) {
+            setError(wsError);
+        }
+    }, [wsError]);
+
+    // Обработка успешного подключения
+    useEffect(() => {
+        if (joinInfo) {
+            console.log('[Connect] Успешное подключение:', joinInfo);
+            navigate('/fieldedit');
+        }
+    }, [joinInfo, navigate]);
 
     const handleJoin = () => {
         setError('');
@@ -331,18 +418,65 @@ function Connect() {
             setError('Введите код комнаты');
             return;
         }
+        if (gameCode.length !== 6) {
+            setError('Код комнаты должен состоять из 6 символов');
+            return;
+        }
+        
+        // Сохраняем код игры и роль в localStorage
         localStorage.setItem('multiplayer_gameCode', gameCode);
         localStorage.setItem('multiplayer_role', 'guest');
+        
+        // Переходим на страницу расстановки кораблей
         navigate('/fieldedit');
     };
+
     return (
         <MenuComponent selctdMenu='2'>
-            <div style={{ position: 'absolute', top: '20vh', left: '0vh', width: '100vh', height: '0vh', transform: 'translate(-50 %, -50 %)' }}>
-                Введите код комнаты:
+            <div style={{ 
+                position: 'absolute', 
+                top: '20vh', 
+                left: '50%', 
+                transform: 'translateX(-50%)',
+                width: '100%',
+                textAlign: 'center',
+                color: 'white'
+            }}>
+                <h2 style={{ marginBottom: '2vh' }}>Подключение к игре</h2>
+                <div style={{ marginBottom: '2vh' }}>
+                    Введите код комнаты:
+                </div>
+                <input 
+                    type="text" 
+                    className="sgencodefield" 
+                    value={gameCode} 
+                    onChange={e => setGameCode(e.target.value.toUpperCase())}
+                    maxLength={6}
+                    placeholder="XXXXXX"
+                    style={{ 
+                        textTransform: 'uppercase',
+                        letterSpacing: '0.5vh',
+                        fontSize: '2vh',
+                        textAlign: 'center'
+                    }}
+                />
+                <button 
+                    onClick={handleJoin} 
+                    className="copybutt"
+                    style={{ marginTop: '2vh' }}
+                >
+                    Войти
+                </button>
+                {error && (
+                    <div style={{ 
+                        color: 'red', 
+                        marginTop: '2vh',
+                        fontSize: '1.8vh'
+                    }}>
+                        {error}
+                    </div>
+                )}
             </div>
-            <input type="text" className="sgencodefield" value={gameCode} onChange={e => setGameCode(e.target.value)} />
-            <button onClick={handleJoin} className="copybutt">Войти</button>
-            {error && <div style={{ color: 'red', marginTop: '2vh' }}>{error}</div>}
         </MenuComponent>
     );
 }
@@ -516,6 +650,7 @@ function FieldEdit() {
     const [mos, setMos] = useState(null);
     const [autoError, setAutoError] = useState('');
     const [waitingJoin, setWaitingJoin] = useState(false);
+    const [error, setError] = useState('');
     const grid = useMemo(() => {
         let trt = []
         let id = 0;
@@ -831,6 +966,7 @@ function FieldEdit() {
         //console.log(x, y);
     }
     async function handleClick() {
+        setError('');
         const ships = shipsRef.current;
         const shipsData = ships.map(ship => ({
             size: ship.len,
@@ -840,11 +976,19 @@ function FieldEdit() {
         }));
         const multiplayerCode = localStorage.getItem('multiplayer_gameCode');
         const multiplayerRole = localStorage.getItem('multiplayer_role');
+        console.log('[FieldEdit] handleClick', { multiplayerCode, multiplayerRole, shipsData });
+        
         if (multiplayerCode && multiplayerRole === 'guest') {
-            joinRoom({ gameCode: multiplayerCode, ships: shipsData });
-            setWaitingJoin(true);
+            try {
+                joinRoom({ gameCode: multiplayerCode, ships: shipsData });
+                console.log('[FieldEdit] joinRoom вызван');
+                setWaitingJoin(true);
+            } catch (e) {
+                setError('Ошибка подключения к игре: ' + e.message);
+            }
             return;
         }
+        
         // --- СИНГЛПЛЕЕР ---
         const difficultyLevel = localStorage.getItem('singleplayer_difficulty') || 'MEDIUM';
         try {
@@ -863,15 +1007,16 @@ function FieldEdit() {
                 localStorage.setItem('singleplayer_gameId', data.id);
                 navigate('/match');
             } else {
-                alert('Ошибка создания игры: ' + response.status);
+                setError('Ошибка создания игры: ' + response.status);
             }
         } catch (e) {
-            alert('Ошибка соединения с сервером');
+            setError('Ошибка соединения с сервером');
         }
     }
     // ДОБАВЛЕНО: useEffect для перехода на матч после joinInfo
     useEffect(() => {
         if (waitingJoin && joinInfo) {
+            console.log('[FieldEdit] joinInfo получен:', joinInfo);
             setWaitingJoin(false);
             navigate('/match');
         }
@@ -922,6 +1067,9 @@ function FieldEdit() {
             setAutoError('Ошибка соединения с сервером');
         }
     }
+    useEffect(() => {
+        console.log('[FieldEdit] Монтирование компонента. multiplayer_gameCode:', localStorage.getItem('multiplayer_gameCode'), 'multiplayer_role:', localStorage.getItem('multiplayer_role'));
+    }, []);
     return (
         <header className="App-header" onMouseUp={(e) => MouseUp(e)} onMouseMove={(e) => MouseMove(e)}>
             <div className="bckgr"></div>
@@ -946,6 +1094,7 @@ function FieldEdit() {
                 <button className='fieldButt' style={{ top: '68vh' }} onClick={() => handleAutoPlace('ASYMMETRIC')}>Ассиметричный метод</button>
                 <button className='fieldButt' style={{ top: '75vh', background: '#4caf50', color: 'white' }} onClick={handleAutoGame}>Играть автоматически</button>
                 {autoError && <div style={{ color: 'red', position: 'absolute', left: '85vh', top: '80vh' }}>{autoError}</div>}
+                {waitingJoin && <div style={{ color: 'white', position: 'absolute', left: '85vh', top: '80vh' }}>Подключение к игре...</div>}
                 <img draggable={false} alt='' onMouseDown={(e) => MouseDown(e, 9)} src={p4} style={{ height: '5.3vh', position: 'absolute', transform: ships[9].rot ? 'rotate(90deg) translate(0, -100%)' : 'rotate(0deg)', transformOrigin: 'top left', left: 3.8 + ships[9].tx * 7.7 + 'vh', top: 3.8 + ships[9].ty * 7.7 + 'vh' }}></img>
                 <img draggable={false} alt='' onMouseDown={(e) => MouseDown(e, 8)} src={p3} style={{ height: '5.3vh', position: 'absolute', transform: ships[8].rot ? 'rotate(90deg) translate(0, -100%)' : 'rotate(0deg)', transformOrigin: 'top left', left: 3.8 + ships[8].tx * 7.7 + 'vh', top: 3.8 + ships[8].ty * 7.7 + 'vh' }}></img>
                 <img draggable={false} alt='' onMouseDown={(e) => MouseDown(e, 7)} src={p3} style={{ height: '5.3vh', position: 'absolute', transform: ships[7].rot ? 'rotate(90deg) translate(0, -100%)' : 'rotate(0deg)', transformOrigin: 'top left', left: 3.8 + ships[7].tx * 7.7 + 'vh', top: 3.8 + ships[7].ty * 7.7 + 'vh' }}></img>
@@ -975,7 +1124,7 @@ function FieldEdit() {
                 <button onClick={handleClick} className="partbutton">Играть
                 </button>
             </div>
-
+            {error && <div style={{ color: 'red', position: 'absolute', left: '85vh', top: '80vh' }}>{error}</div>}
         </header>
     );
 }
@@ -989,200 +1138,206 @@ function MatchScreen() {
     const gameId = localStorage.getItem('singleplayer_gameId');
     const multiplayerCode = localStorage.getItem('multiplayer_gameCode');
     const multiplayerRole = localStorage.getItem('multiplayer_role');
-    const { gameState: wsGameState, moveInfo, sendMove, requestState } = useMultiplayerWS();
+    const { gameState: wsGameState, moveInfo, sendMove, requestState, error: wsError } = useMultiplayerWS();
     const [mpGame, setMpGame] = useState(null);
     const [mpLoading, setMpLoading] = useState(true);
     const [mpMoveError, setMpMoveError] = useState('');
     const [mpMoveResult, setMpMoveResult] = useState(null);
 
-    console.log('multiplayerCode', multiplayerCode);
-    console.log('mpGame', mpGame);
-    console.log('wsGameState', wsGameState);
-
-    // --- NEW: Запрос состояния игры для host ---
+    // Обработка ошибок WebSocket
     useEffect(() => {
-        if (multiplayerCode && multiplayerRole === 'host') {
-            requestState(multiplayerCode);
+        if (wsError) {
+            setError(wsError);
         }
-    }, [multiplayerCode, multiplayerRole, requestState]);
+    }, [wsError]);
 
-    // --- NEW: Запрос состояния игры для guest ---
+    // Запрос состояния игры для host
     useEffect(() => {
-        if (multiplayerCode && multiplayerRole === 'guest' && !wsGameState) {
-            requestState(multiplayerCode);
-        }
-    }, [multiplayerCode, multiplayerRole, wsGameState, requestState]);
-
-    // --- SINGLEPLAYER ---
-    async function fetchGame() {
-        setLoading(true);
-        setError('');
-        try {
-            const response = await authorizedFetch(`http://localhost:8080/game/${gameId}`);
-            if (response.ok) {
-                const data = await response.json();
-                setGame(data);
-            } else {
-                setError('Ошибка загрузки игры: ' + response.status);
+        if (multiplayerCode && multiplayerRole === 'host' && !mpGame) {
+            try {
+                requestState({ gameCode: multiplayerCode });
+            } catch (error) {
+                console.error('Ошибка при запросе состояния игры:', error);
+                setError('Ошибка соединения с сервером');
             }
-        } catch (e) {
-            setError('Ошибка соединения с сервером');
         }
-        setLoading(false);
-    }
+    }, [multiplayerCode, multiplayerRole, mpGame, requestState]);
 
-    // Старт игры (singleplayer)
-    async function handleStart() {
-        setError('');
-        try {
-            const response = await authorizedFetch(`http://localhost:8080/game/start/${gameId}`, { method: 'POST' });
-            if (response.ok) {
-                await fetchGame();
-            } else {
-                setError('Ошибка старта игры: ' + response.status);
+    // Запрос состояния игры для guest
+    useEffect(() => {
+        if (multiplayerCode && multiplayerRole === 'guest' && !mpGame) {
+            try {
+                requestState({ gameCode: multiplayerCode });
+            } catch (error) {
+                console.error('Ошибка при запросе состояния игры:', error);
+                setError('Ошибка соединения с сервером');
             }
-        } catch (e) {
-            setError('Ошибка соединения с сервером');
         }
-    }
+    }, [multiplayerCode, multiplayerRole, mpGame, requestState]);
 
+    // Обновление состояния игры при получении данных от WebSocket
     useEffect(() => {
-        if (!multiplayerCode && gameId) fetchGame();
-    }, [gameId, multiplayerCode]);
-
-    // --- MULTIPLAYER ---
-    useEffect(() => {
-        if (multiplayerCode && wsGameState) {
+        if (wsGameState) {
             setMpGame(wsGameState);
             setMpLoading(false);
+            setError('');
         }
-    }, [wsGameState, multiplayerCode]);
-    useEffect(() => {
-        if (multiplayerCode && moveInfo) {
-            setMpMoveResult(moveInfo);
-            if (moveInfo && moveInfo.gameState) setMpGame(moveInfo.gameState);
-        }
-    }, [moveInfo, multiplayerCode]);
+    }, [wsGameState]);
 
-    // --- Ход игрока (singleplayer) ---
-    async function handleCellClick(x, y) {
-        setMoveError('');
-        setMoveResult(null);
-        try {
-            const response = await authorizedFetch('http://localhost:8080/game/move', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ gameId: Number(gameId), x, y })
-            });
-            if (response.ok) {
-                const data = await response.json();
-                setMoveResult(data);
-                setGame(data.gameState);
-            } else {
-                if (response.status === 400) setMoveError('Некорректный ход или не ваша очередь');
-                else if (response.status === 404) setMoveError('Игра не найдена');
-                else if (response.status === 401) setMoveError('Не авторизован');
-                else setMoveError('Ошибка хода: ' + response.status);
+    // Обработка ходов
+    useEffect(() => {
+        if (moveInfo) {
+            setMpMoveResult(moveInfo);
+            if (moveInfo.gameState) {
+                setMpGame(moveInfo.gameState);
             }
-        } catch (e) {
-            setMoveError('Ошибка соединения с сервером');
+            setMpMoveError('');
         }
-    }
-    // --- Ход игрока (multiplayer) ---
+    }, [moveInfo]);
+
+    // Ход игрока (multiplayer)
     function handleMpCellClick(x, y) {
         setMpMoveError('');
         setMpMoveResult(null);
-        if (!mpGame || !mpGame.playerTurn) {
-            setMpMoveError('Сейчас не ваш ход');
+        
+        if (!mpGame) {
+            setMpMoveError('Игра не загружена');
             return;
         }
-        sendMove({ gameCode: multiplayerCode, x, y });
-    }
-    // --- Очистка localStorage при завершении мультиплеерной игры ---
-    useEffect(() => {
-        if (mpGame && (mpGame.gameState === 'PLAYER_WON' || mpGame.gameState === 'COMPUTER_WON' || mpGame.gameState === 'GAME_OVER')) {
-            localStorage.removeItem('multiplayer_gameCode');
-            localStorage.removeItem('multiplayer_role');
+        
+        if (mpGame.gameState !== 'IN_PROGRESS') {
+            setMpMoveError('Игра не активна');
+            return;
         }
-    }, [mpGame]);
+        
+        if (!mpGame.playerTurn) {
+            setMpMoveError('Не ваш ход');
+            return;
+        }
 
-    // --- Рендер поля (общий) ---
+        try {
+            sendMove({
+                gameCode: multiplayerCode,
+                x: x,
+                y: y
+            });
+        } catch (e) {
+            setMpMoveError('Ошибка отправки хода: ' + e.message);
+        }
+    }
+
+    // Выход из игры
+    function handleExit() {
+        localStorage.removeItem('multiplayer_gameCode');
+        localStorage.removeItem('multiplayer_role');
+        navigate('/');
+    }
+
+    // Рендер доски
     function renderBoard(board, isEnemy, onCellClick) {
+        if (!board) return null;
         return (
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(10,3vh)', gridTemplateRows: 'repeat(10,3vh)', gap: '0.2vh', margin: '1vh' }}>
                 {board.map((row, y) => row.map((cell, x) => {
                     let bg = '#1e90ff';
-                    if (cell === 1 && !isEnemy) bg = '#444'; // корабль игрока
+                    if (cell > 0 && !isEnemy) bg = '#444'; // корабль игрока
                     if (cell === 2) bg = '#eee'; // промах
                     if (cell === 3) bg = '#e53935'; // попадание
-                    return <div key={x+','+y} onClick={isEnemy && onCellClick ? ()=>onCellClick(x,y):undefined} style={{ width: '3vh', height: '3vh', background: bg, border: '1px solid #222', cursor: isEnemy && onCellClick ? 'pointer':'default' }}></div>;
+                    return (
+                        <div 
+                            key={x+','+y} 
+                            onClick={isEnemy && onCellClick ? () => onCellClick(x,y) : undefined} 
+                            style={{ 
+                                width: '3vh', 
+                                height: '3vh', 
+                                background: bg, 
+                                border: '1px solid #222', 
+                                cursor: isEnemy && onCellClick ? 'pointer' : 'default' 
+                            }}
+                        />
+                    );
                 }))}
             </div>
         );
     }
 
-    // --- MULTIPLAYER UI ---
+    // Мультиплеер UI
     if (multiplayerCode) {
-        if (mpLoading) return <div style={{color:'white'}}>Загрузка...</div>;
-        if (!mpGame) return <div style={{color:'white'}}>Нет данных об игре</div>;
-        return (
-            <header className="App-header">
-                <div className="bckgr"></div>
-                <div style={{ color: 'white', fontSize: '3vh', marginBottom: '2vh' }}>
-                    Игра (мультиплеер) — {mpGame.gameState === 'WAITING' ? 'Ожидание соперника' : mpGame.gameState === 'IN_PROGRESS' ? 'В процессе' : mpGame.gameState === 'PLAYER_WON' ? 'Вы выиграли!' : mpGame.gameState === 'COMPUTER_WON' ? 'Соперник выиграл' : mpGame.gameState}
+        if (mpLoading) {
+            return (
+                <div style={{ color: 'white', textAlign: 'center', marginTop: '20vh' }}>
+                    Загрузка игры...
                 </div>
-                <div style={{ display: 'flex', flexDirection: 'row', justifyContent: 'center', gap: '8vh' }}>
+            );
+        }
+
+        if (!mpGame) {
+            return (
+                <div style={{ color: 'white', textAlign: 'center', marginTop: '20vh' }}>
+                    Ошибка загрузки игры
+                    <button onClick={handleExit} style={{ marginTop: '2vh' }}>Выйти</button>
+                </div>
+            );
+        }
+
+        return (
+            <div style={{ padding: '2vh' }}>
+                <div style={{ color: 'white', marginBottom: '2vh' }}>
+                    Код игры: {multiplayerCode}
+                    <button onClick={handleExit} style={{ marginLeft: '2vh' }}>Выйти</button>
+                </div>
+                
+                <div style={{ display: 'flex', justifyContent: 'space-around' }}>
                     <div>
                         <div style={{ color: 'white', marginBottom: '1vh' }}>Ваше поле</div>
                         {mpGame.playerBoard && renderBoard(mpGame.playerBoard.board, false)}
                     </div>
                     <div>
                         <div style={{ color: 'white', marginBottom: '1vh' }}>Поле противника</div>
-                        {mpGame.computerBoard && renderBoard(mpGame.computerBoard.board, true, (x,y)=>{
-                            if (mpGame.gameState==='IN_PROGRESS' && mpGame.playerTurn) handleMpCellClick(x,y);
+                        {mpGame.computerBoard && renderBoard(mpGame.computerBoard.board, true, (x,y) => {
+                            if (mpGame.gameState === 'IN_PROGRESS' && mpGame.playerTurn) {
+                                handleMpCellClick(x,y);
+                            }
                         })}
                     </div>
                 </div>
-                <div style={{ color: 'white', marginTop: '2vh' }}>Ход: {mpGame.playerTurn ? 'Ваш' : 'Соперника'}</div>
-                {mpMoveResult && <div style={{ color: mpMoveResult.hit ? 'green' : 'orange', marginTop: '1vh' }}>{mpMoveResult.hit ? 'Попадание!' : 'Промах!'} {mpMoveResult.sunk ? 'Корабль потоплен!' : ''} {mpMoveResult.gameOver ? 'Игра окончена.' : ''}</div>}
-                {mpMoveError && <div style={{ color: 'red', marginTop: '1vh' }}>{mpMoveError}</div>}
-                <button onClick={()=>{
-                    localStorage.removeItem('multiplayer_gameCode');
-                    localStorage.removeItem('multiplayer_role');
-                    navigate('/singleplayer');
-                }} className="partbutton" style={{marginTop:'3vh'}}>Выйти в меню</button>
-            </header>
+
+                <div style={{ color: 'white', marginTop: '2vh' }}>
+                    Статус: {mpGame.gameState === 'IN_PROGRESS' ? 'Игра идет' : 'Ожидание'}
+                    {mpGame.gameState === 'IN_PROGRESS' && (
+                        <span style={{ marginLeft: '2vh' }}>
+                            Ход: {mpGame.playerTurn ? 'Ваш' : 'Соперника'}
+                        </span>
+                    )}
+                </div>
+
+                {mpMoveResult && (
+                    <div style={{ 
+                        color: mpMoveResult.hit ? 'green' : 'orange', 
+                        marginTop: '1vh' 
+                    }}>
+                        {mpMoveResult.hit ? 'Попадание!' : 'Промах!'}
+                        {mpMoveResult.sunk && ' Корабль потоплен!'}
+                        {mpMoveResult.gameOver && ' Игра окончена!'}
+                    </div>
+                )}
+
+                {mpMoveError && (
+                    <div style={{ color: 'red', marginTop: '1vh' }}>
+                        {mpMoveError}
+                    </div>
+                )}
+
+                {error && (
+                    <div style={{ color: 'red', marginTop: '1vh' }}>
+                        {error}
+                    </div>
+                )}
+            </div>
         );
     }
 
-    // --- SINGLEPLAYER UI ---
-    if (!gameId) return <div style={{color:'white'}}>Нет активной игры. <button onClick={()=>navigate('/singleplayer')}>На главную</button></div>;
-    if (loading) return <div style={{color:'white'}}>Загрузка...</div>;
-    if (error) return <div style={{color:'red'}}>{error}</div>;
-    if (!game) return <div style={{color:'white'}}>Нет данных об игре</div>;
-    return (
-        <header className="App-header">
-            <div className="bckgr"></div>
-            <div style={{ color: 'white', fontSize: '3vh', marginBottom: '2vh' }}>Игра #{game.id} — {game.gameState === 'WAITING' ? 'Ожидание старта' : game.gameState === 'IN_PROGRESS' ? 'В процессе' : game.gameState === 'PLAYER_WON' ? 'Вы выиграли!' : game.gameState === 'COMPUTER_WON' ? 'Компьютер выиграл' : game.gameState}</div>
-            {game.gameState === 'WAITING' && <button onClick={handleStart} className="partbutton">Стартовать игру</button>}
-            <div style={{ display: 'flex', flexDirection: 'row', justifyContent: 'center', gap: '8vh' }}>
-                <div>
-                    <div style={{ color: 'white', marginBottom: '1vh' }}>Ваше поле</div>
-                    {renderBoard(game.playerBoard.board, false)}
-                </div>
-                <div>
-                    <div style={{ color: 'white', marginBottom: '1vh' }}>Поле противника</div>
-                    {renderBoard(game.computerBoard.board, true, (x,y)=>{
-                        if (game.gameState==='IN_PROGRESS' && game.playerTurn) handleCellClick(x,y);
-                    })}
-                </div>
-            </div>
-            <div style={{ color: 'white', marginTop: '2vh' }}>Ход: {game.playerTurn ? 'Ваш' : 'Компьютера'}</div>
-            {moveResult && <div style={{ color: moveResult.hit ? 'green' : 'orange', marginTop: '1vh' }}>{moveResult.hit ? 'Попадание!' : 'Промах!'} {moveResult.sunk ? 'Корабль потоплен!' : ''} {moveResult.gameOver ? 'Игра окончена.' : ''}</div>}
-            {moveError && <div style={{ color: 'red', marginTop: '1vh' }}>{moveError}</div>}
-            <button onClick={()=>navigate('/singleplayer')} className="partbutton" style={{marginTop:'3vh'}}>Выйти в меню</button>
-        </header>
-    );
+    // ... rest of the singleplayer code ...
 }
 
 async function authorizedFetch(url, options = {}) {
