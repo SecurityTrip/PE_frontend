@@ -20,7 +20,20 @@ import p3 from './ps/p3.png';
 import p4 from './ps/p4.png';
 import { useMultiplayerWS } from './useMultiplayerWS';
 import SockJS from 'sockjs-client';
-
+import Auth from './Auth';
+import { authorizedFetch } from './api';
+import Regis from './Regis';
+import SelectedMenu from './SelectedMenu';
+import Singleplayer from './Singleplayer';
+import MenuComponent from './MenuComponent';
+import CreateRoom from './CreateRoom';
+import Connect from './Connect';
+import ProfSet from './ProfSet';
+import Rules from './Rules';
+import About from './About';
+import System from './System';
+import SingleplayerMatchScreen from './SingleplayerMatchScreen';
+import MultiplayerMatchScreen from './MultiplayerMatchScreen';
 
 function App() {
     return (
@@ -37,612 +50,14 @@ function App() {
                     <Route path="/about" element={<About />} />
                     <Route path="/system" element={<System />} />
                     <Route path="/fieldedit" element={<FieldEdit />} />
-                    <Route path="/match" element={<MatchScreen />} />
+                    <Route path="/singleplayer-match" element={<SingleplayerMatchScreen />} />
+                    <Route path="/multiplayer-match" element={<MultiplayerMatchScreen />} />
                 </Routes>
             </div>
         </Router>
     );
 }
-function Auth() {
-    const navigate = useNavigate();
-    const [login, setLogin] = useState('');
-    const [pass, setPass] = useState('');
-    const [error, setError] = useState('');
 
-    async function handleClick() {
-        setError('');
-        try {
-            const response = await fetch('http://localhost:8080/auth/login', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    username: login,
-                    password: pass
-                })
-            });
-            if (response.ok) {
-                const data = await response.json();
-                localStorage.setItem('token', data.token);
-                localStorage.setItem('username', data.username);
-                localStorage.setItem('userId', data.userId);
-                localStorage.setItem('avatarId', data.avatarId);
-                localStorage.setItem('refreshToken', data.refreshToken);
-                navigate('/singleplayer');
-            } else {
-                setError('Неверный логин или пароль');
-            }
-        } catch (e) {
-            setError('Ошибка соединения с сервером');
-        }
-    }
-
-    return (
-        <header className="App-header">
-            <div className="bckgr"></div>
-            <img className="logo" src={logoimgimg} alt="Logo" />
-            <img className="logo" src={logolabelimg} alt="Logo" />
-            <div className="logintab">Авторизация</div>
-            <div className="logintabdark">
-                <input onChange={(e) => setLogin(e.target.value)} value={login} type="text" placeholder="Логин" className="loginput" style={{ top: '11.5vh' }} />
-                <input onChange={(e) => setPass(e.target.value)} value={pass} type="password" placeholder="Пароль" className="loginput" />
-                <button onClick={handleClick} className="logbutton">Войти</button>
-                {error && <div style={{ color: 'red', marginTop: '2vh' }}>{error}</div>}
-            </div>
-            <Link to="/regis" className="linkToReg">Зарегистрироваться</Link>
-        </header>
-    );
-}
-function Regis() {
-    const navigate = useNavigate();
-    const [selavx, setSelavx] = useState(-3.5);
-    const [selavy, setSelavy] = useState(5.5);
-    const [iSeld, setISeld] = useState(0);
-
-    const [login, setLogin] = useState('');
-    const [pass, setPass] = useState('');
-    const [passpass, setPassPass] = useState('');
-    const [error, setError] = useState('');
-    const [success, setSuccess] = useState('');
-
-    async function handleClick() {
-        setError('');
-        setSuccess('');
-        if (!login || !pass || !passpass) {
-            setError('Заполните все поля');
-            return;
-        }
-        if (pass !== passpass) {
-            setError('Пароли не совпадают');
-            return;
-        }
-        try {
-            const response = await fetch('http://localhost:8080/auth/register', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    username: login,
-                    password: pass,
-                    avatarId: iSeld
-                })
-            });
-            if (response.ok) {
-                const data = await response.json();
-                setSuccess(data.message || 'Регистрация успешна!');
-                setTimeout(() => navigate('/'), 1500);
-            } else {
-                const data = await response.json();
-                setError(data.message || 'Ошибка регистрации');
-            }
-        } catch (e) {
-            setError('Ошибка соединения с сервером');
-        }
-    }
-    function avaSelect(i) {
-        setISeld(i);
-        switch (i) {
-            case 0: { setSelavx(-3.5); setSelavy(5.5); break; }
-            case 1: { setSelavx(6.5); setSelavy(5.5); break; }
-            case 2: { setSelavx(16.5); setSelavy(5.5); break; }
-            case 3: { setSelavx(26.5); setSelavy(5.5); break; }
-            case 4: { setSelavx(36.5); setSelavy(5.5); break; }
-            case 5: { setSelavx(-3.5); setSelavy(15.5); break; }
-            case 6: { setSelavx(6.5); setSelavy(15.5); break; }
-            case 7: { setSelavx(16.5); setSelavy(15.5); break; }
-            case 8: { setSelavx(26.5); setSelavy(15.5); break; }
-            case 9: { setSelavx(36.5); setSelavy(15.5); break; }
-            default: { alert('ничего себе'); }
-        }
-    }
-    
-    return (
-        <header>
-            <div className="bckgr"></div>
-            <img className="logo" src={logoimgimg} alt="Logo" />
-            <img className="logo" src={logolabelimg} alt="Logo" />
-            <div className="regtab">Регистрация</div>
-            <div className="regtabdark">
-                <input onChange={(e) => setLogin(e.target.value)} value={login} type="text" placeholder="Логин" className="reginput" />
-                <input onChange={(e) => setPass(e.target.value)} value={pass} type="password" placeholder="Пароль" className="reginput" style={{ top: '11.5vh' }} />
-                <input onChange={(e) => setPassPass(e.target.value)} value={passpass} type="password" placeholder="Повторите пароль" className="reginput" style={{ top: '18vh' }} />
-                <button onClick={handleClick} className="regbutton">Зарегистрироваться</button>
-                {error && <div style={{ color: 'red', marginTop: '2vh' }}>{error}</div>}
-                {success && <div style={{ color: 'green', marginTop: '2vh' }}>{success}</div>}
-                <div style={{position: 'absolute',color: 'white',left: 'calc(50% + 4vh)',fontSize:'4vh'} }>Выберите аватар:</div>
-                <SelectedAva x={selavx} y={selavy}></SelectedAva>
-                <Avatimbut y='7' x='-2' img={avaimg0} onClick={() => { avaSelect(0) }} />
-                <Avatimbut y='7' x='8' img={avaimg1} onClick={() => { avaSelect(1) }} />
-                <Avatimbut y='7' x='18' img={avaimg2} onClick={() => { avaSelect(2) }} />
-                <Avatimbut y='7' x='28' img={avaimg3} onClick={() => { avaSelect(3) }} />
-                <Avatimbut y='7' x='38' img={avaimg4} onClick={() => { avaSelect(4) }} />
-                <Avatimbut y='17' x='-2' img={avaimg5} onClick={() => { avaSelect(5) }} />
-                <Avatimbut y='17' x='8' img={avaimg6} onClick={() => { avaSelect(6) }} />
-                <Avatimbut y='17' x='18' img={avaimg7} onClick={() => { avaSelect(7) }} />
-                <Avatimbut y='17' x='28' img={avaimg8} onClick={() => { avaSelect(8) }} />
-                <Avatimbut y='17' x='38' img={avaimg9} onClick={() => { avaSelect(9) }} />
-            </div>
-            <Link to="/" className="linkToLogin">У меня уже есть аккаунт, войти</Link>
-            
-        </header>
-    );
-}
-function Avatimbut({ y, x, img,onClick }) {
-    return (
-        <img alt="avatar_img" src={img } className="avatarimgbut" onClick={ onClick} style={{ top: y + 'vh', left: 'calc(50% + ' + x + 'vh', backgroundSize: 'cover'  } }></img>
-    );
-}
-function SelectedAva({y,x }) {
-    return (
-        <div className="selectedAva" style={{ top: y + 'vh', left: 'calc(50% + ' + x + 'vh' }} ></div>
-    );
-}
-function SelectedMenu({ y }) {
-    return (
-        <div className="selectedMenu" style={{ top: 'calc(' + y + '*7vh + 29.5vh)' }} ></div>
-    );
-}
-function Singleplayer() {
-    const [selected, setSelected] = useState(0);  // 0 = легкий, 1 = средний, 2 = сложный
-    const navigate = useNavigate();
-    const handleClick = (index) => {
-        setSelected(index);
-    };
-    const playClick = () => {
-        // Сохраняем выбранную сложность в localStorage
-        let diff = 'EASY';
-        if (selected === 1) diff = 'MEDIUM';
-        if (selected === 2) diff = 'HARD';
-        localStorage.setItem('singleplayer_difficulty', diff);
-        navigate('/fieldedit');
-    };
-
-    return (
-        <MenuComponent selctdMenu='0'>
-            <div style={{
-                position:'absolute',
-                top: '20vh',
-                left: '0vh',
-                width: '50vh',
-                height: '0vh',
-                transform: 'translate(-50 %, -50 %)'
-            }}>
-                Сложность ИИ:
-            </div>
-            <div style={{
-                position: 'absolute',
-                top: '30vh',
-                left: '10vh',
-                width: '80vh',
-                height: '7vh',
-                transform: 'translate(-50 %, -50 %)',
-                backgroundColor: 'rgb(255,255,255,0.5)',
-                borderRadius: '5vh',
-                flexDirection: 'row',
-                whiteSpace: 'pre'
-            }}>
-                <div style={{
-                    position: 'absolute',
-                    top: 0,
-                    left: selected * 33.33 + '%',
-                    width: '33.33%',
-                    height: '100%',
-                    backgroundColor: 'rgba(255, 255, 255, 0.5)',
-                    borderRadius: '5vh',
-                    transition: 'left 0.3s ease',
-                    zIndex: -1
-                }} />
-                <div style={{ zIndex: 100 }}>
-                <label  onClick={() => handleClick(0)}>Легкий           </label>
-                <label  onClick={() => handleClick(1)} >Средний       </label>
-                    <label  onClick={() => handleClick(2)}>Сложный</label>
-                </div>
-                
-                
-            </div>
-            <button onClick={playClick} className="singleplaybutt">Играть</button>
-        </MenuComponent>
-    );
-}
-function CreateRoom() {
-    const navigate = useNavigate();
-    const { createRoom, roomCode, connected, error: wsError } = useMultiplayerWS();
-    const [created, setCreated] = useState(false);
-    const [error, setError] = useState('');
-    const [ships, setShips] = useState([
-        { size: 4, x: 0, y: 0, horizontal: true },
-        { size: 3, x: 2, y: 2, horizontal: true },
-        { size: 3, x: 4, y: 4, horizontal: true },
-        { size: 2, x: 6, y: 6, horizontal: true },
-        { size: 2, x: 8, y: 8, horizontal: true },
-        { size: 2, x: 1, y: 1, horizontal: true },
-        { size: 1, x: 3, y: 3, horizontal: true },
-        { size: 1, x: 5, y: 5, horizontal: true },
-        { size: 1, x: 7, y: 7, horizontal: true },
-        { size: 1, x: 9, y: 9, horizontal: true },
-    ]);
-
-    // Обработка ошибок WebSocket
-    useEffect(() => {
-        if (wsError) {
-            setError(wsError);
-        }
-    }, [wsError]);
-
-    // Обработка получения кода комнаты
-    useEffect(() => {
-        if (roomCode && roomCode.gameCode) {
-            console.log('[CreateRoom] Получен код комнаты:', roomCode);
-            setCreated(true);
-        }
-    }, [roomCode]);
-
-    const handleCreate = async () => {
-        setError('');
-        if (!connected) {
-            setError('Нет соединения с сервером');
-            return;
-        }
-        try {
-            // Создаем комнату через WebSocket
-            createRoom({ ships });
-        } catch (e) {
-            setError('Ошибка создания комнаты: ' + e.message);
-        }
-    };
-
-    const handleCopy = () => {
-        if (roomCode && roomCode.gameCode) {
-            navigator.clipboard.writeText(roomCode.gameCode)
-                .then(() => {
-                    localStorage.setItem('multiplayer_gameCode', roomCode.gameCode);
-                    localStorage.setItem('multiplayer_role', 'host');
-                    navigate('/fieldedit');
-                })
-                .catch(err => {
-                    setError('Ошибка копирования кода: ' + err.message);
-                });
-        }
-    };
-
-    return (
-        <MenuComponent selctdMenu='1'>
-            <div style={{ 
-                position: 'absolute', 
-                top: '20vh', 
-                left: '50%', 
-                transform: 'translateX(-50%)',
-                width: '100%',
-                textAlign: 'center',
-                color: 'white'
-            }}>
-                <h2 style={{ marginBottom: '2vh' }}>Создание игры</h2>
-                {!created ? (
-                    <>
-                        <div style={{ marginBottom: '2vh' }}>
-                            Нажмите кнопку для создания новой игры
-                        </div>
-                        <button 
-                            onClick={handleCreate} 
-                            className="copybutt"
-                            style={{ marginTop: '2vh' }}
-                        >
-                            Создать игру
-                        </button>
-                    </>
-                ) : (
-                    <>
-                        <div style={{ marginBottom: '2vh' }}>
-                            Код вашей игры:
-                        </div>
-                        <div style={{ 
-                            fontSize: '3vh',
-                            letterSpacing: '0.5vh',
-                            marginBottom: '2vh',
-                            fontFamily: 'monospace'
-                        }}>
-                            {roomCode.gameCode}
-                        </div>
-                        <button 
-                            onClick={handleCopy} 
-                            className="copybutt"
-                            style={{ marginTop: '2vh' }}
-                        >
-                            Начать игру
-                        </button>
-                    </>
-                )}
-                {error && (
-                    <div style={{ 
-                        color: 'red', 
-                        marginTop: '2vh',
-                        fontSize: '1.8vh'
-                    }}>
-                        {error}
-                    </div>
-                )}
-            </div>
-        </MenuComponent>
-    );
-}
-function Connect() {
-    const navigate = useNavigate();
-    const [gameCode, setGameCode] = useState('');
-    const [error, setError] = useState('');
-    const { joinRoom, joinInfo, connected, error: wsError } = useMultiplayerWS();
-
-    // Обработка ошибок WebSocket
-    useEffect(() => {
-        if (wsError) {
-            setError(wsError);
-        }
-    }, [wsError]);
-
-    // Обработка успешного подключения
-    useEffect(() => {
-        if (joinInfo) {
-            console.log('[Connect] Успешное подключение:', joinInfo);
-            navigate('/fieldedit');
-        }
-    }, [joinInfo, navigate]);
-
-    const handleJoin = () => {
-        setError('');
-        if (!connected) {
-            setError('Нет соединения с сервером');
-            return;
-        }
-        if (!gameCode) {
-            setError('Введите код комнаты');
-            return;
-        }
-        if (gameCode.length !== 6) {
-            setError('Код комнаты должен состоять из 6 символов');
-            return;
-        }
-        
-        // Сохраняем код игры и роль в localStorage
-        localStorage.setItem('multiplayer_gameCode', gameCode);
-        localStorage.setItem('multiplayer_role', 'guest');
-        
-        // Переходим на страницу расстановки кораблей
-        navigate('/fieldedit');
-    };
-
-    return (
-        <MenuComponent selctdMenu='2'>
-            <div style={{ 
-                position: 'absolute', 
-                top: '20vh', 
-                left: '50%', 
-                transform: 'translateX(-50%)',
-                width: '100%',
-                textAlign: 'center',
-                color: 'white'
-            }}>
-                <h2 style={{ marginBottom: '2vh' }}>Подключение к игре</h2>
-                <div style={{ marginBottom: '2vh' }}>
-                    Введите код комнаты:
-                </div>
-                <input 
-                    type="text" 
-                    className="sgencodefield" 
-                    value={gameCode} 
-                    onChange={e => setGameCode(e.target.value.toUpperCase())}
-                    maxLength={6}
-                    placeholder="XXXXXX"
-                    style={{ 
-                        textTransform: 'uppercase',
-                        letterSpacing: '0.5vh',
-                        fontSize: '2vh',
-                        textAlign: 'center'
-                    }}
-                />
-                <button 
-                    onClick={handleJoin} 
-                    className="copybutt"
-                    style={{ marginTop: '2vh' }}
-                >
-                    Войти
-                </button>
-                {error && (
-                    <div style={{ 
-                        color: 'red', 
-                        marginTop: '2vh',
-                        fontSize: '1.8vh'
-                    }}>
-                        {error}
-                    </div>
-                )}
-            </div>
-        </MenuComponent>
-    );
-}
-function ProfSet() {
-    const [selavx, setSelavx] = useState(-3.5);
-    const [selavy, setSelavy] = useState(5.5);
-    const [login, setLogin] = useState('');
-    const [oldPass, setOldPass] = useState('');
-    const [newPass, setNewPass] = useState('');
-    const [repeatPass, setRepeatPass] = useState('');
-    const [avaId, setAvaId] = useState(Number(localStorage.getItem('avatarId')) || 0);
-    const [msg, setMsg] = useState('');
-    const [err, setErr] = useState('');
-
-    function selectAva(i) {
-        setAvaId(i);
-        switch (i) {
-            case 0: setSelavx(-3.5); setSelavy(5.5); break;
-            case 1: setSelavx(6.5); setSelavy(5.5); break;
-            case 2: setSelavx(16.5); setSelavy(5.5); break;
-            case 3: setSelavx(26.5); setSelavy(5.5); break;
-            case 4: setSelavx(36.5); setSelavy(5.5); break;
-            case 5: setSelavx(-3.5); setSelavy(15.5); break;
-            case 6: setSelavx(6.5); setSelavy(15.5); break;
-            case 7: setSelavx(16.5); setSelavy(15.5); break;
-            case 8: setSelavx(26.5); setSelavy(15.5); break;
-            case 9: setSelavx(36.5); setSelavy(15.5); break;
-            default: break;
-        }
-    }
-
-    async function saveClick() {
-        setMsg(''); setErr('');
-        if (newPass && newPass !== repeatPass) {
-            setErr('Пароли не совпадают');
-            return;
-        }
-        // Формируем только изменённые поля
-        const req = {};
-        if (login) req.username = login;
-        if (newPass) req.password = newPass;
-        if (avaId !== Number(localStorage.getItem('avatarId'))) req.avatarId = avaId;
-        if (Object.keys(req).length === 0) {
-            setErr('Нет изменений для сохранения');
-            return;
-        }
-        try {
-            const response = await authorizedFetch('http://localhost:8080/user/me', {
-                method: 'PUT',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(req)
-            });
-            if (response.ok) {
-                setMsg('Профиль успешно обновлён');
-                if (req.username) localStorage.setItem('username', req.username);
-                if (req.avatarId !== undefined) localStorage.setItem('avatarId', req.avatarId);
-            } else if (response.status === 400) {
-                setErr('Некорректные данные');
-            } else if (response.status === 401) {
-                setErr('Не авторизован');
-            } else {
-                setErr('Ошибка: ' + response.status);
-            }
-        } catch (e) {
-            setErr('Ошибка соединения с сервером');
-        }
-    }
-    return (
-        <MenuComponent selctdMenu='3'>
-            <div style={{ position: 'absolute', top: '10vh', left: '15vh', fontSize: '6vh' }}>Аватар:</div>
-            <SelectedAva x={selavx} y={selavy}></SelectedAva>
-            <Avatimbut y='7' x='-2' img={avaimg0} onClick={() => { selectAva(0) }} />
-            <Avatimbut y='7' x='8' img={avaimg1} onClick={() => { selectAva(1) }} />
-            <Avatimbut y='7' x='18' img={avaimg2} onClick={() => { selectAva(2) }} />
-            <Avatimbut y='7' x='28' img={avaimg3} onClick={() => { selectAva(3) }} />
-            <Avatimbut y='7' x='38' img={avaimg4} onClick={() => { selectAva(4) }} />
-            <Avatimbut y='17' x='-2' img={avaimg5} onClick={() => { selectAva(5) }} />
-            <Avatimbut y='17' x='8' img={avaimg6} onClick={() => { selectAva(6) }} />
-            <Avatimbut y='17' x='18' img={avaimg7} onClick={() => { selectAva(7) }} />
-            <Avatimbut y='17' x='28' img={avaimg8} onClick={() => { selectAva(8) }} />
-            <Avatimbut y='17' x='38' img={avaimg9} onClick={() => { selectAva(9) }} />
-            <input style={{top: '33vh'}} type="text" placeholder="Новый логин" className="profSetInputs" value={login} onChange={e=>setLogin(e.target.value)} />
-            <input style={{ top: '40vh' }} type="password" placeholder="Старый пароль (не требуется)" className="profSetInputs" value={oldPass} onChange={e=>setOldPass(e.target.value)} />
-            <input style={{ top: '47vh' }} type="password" placeholder="Новый пароль" className="profSetInputs" value={newPass} onChange={e=>setNewPass(e.target.value)} />
-            <input style={{ top: '54vh' }} type="password" placeholder="Повторите пароль" className="profSetInputs" value={repeatPass} onChange={e=>setRepeatPass(e.target.value)} />
-            <button onClick={saveClick} className="savebutt">Сохранить изменения</button>
-            {msg && <div style={{color:'green',marginTop:'2vh'}}>{msg}</div>}
-            {err && <div style={{color:'red',marginTop:'2vh'}}>{err}</div>}
-        </MenuComponent>        
-    );
-}
-function Rules() {
-    
-    return (
-        <MenuComponent selctdMenu='4'>
-            <div className='rulesScroll'>
-                fkj;ajksdj vkajsh dkjg;kajs;kvjh a;kjs hd;lkfgjha;kjvhwrijhgfkuah dfkj ha;ksd h;fa shd;vkhaoi w hgoihaoiv h[oaej v[oj a[osd jfo iasoif j[oais jdvoia j[soidjg[oia usoidjf[oiasj d[ofi[vo iasj[ofijgo[ ia sjd[ofij aosi djgvaslkdh f;as hd;lfkh ;lk;fa shd;k jfh;oais dovhas;jdh fkljh aslkjdhfklj hjhaskj dhkjhab sjkfh jkhasdjhf jahshdjkvhaklsdhflkjhasdk jfkasjlfkjashdkljfhaslkjd hfkjsad flsad fkaslkjf l;asjd;lkfaskf lask fljfakjshdkfjjalksjflkj aslkdlk alsk flasjdl kfjasljaslk jalsk lkas jlkajs lkjsl kafj alksdj
-            </div>
-        </MenuComponent>
-    );
-}
-function About() {
-    return (
-        <MenuComponent selctdMenu='5'>
-            <div style={{ textAlign: 'left', position: 'absolute',width:'90vh', top: '50%', left: '50%', transform:'translate(-50%, -50%)' } }>
-                Фронтенд: Паршин Никита<br />
-                Бекенд: Лысов Илья<br />
-                Документация: Лебедев Евгений
-            </div>
-        </MenuComponent>
-    );
-}
-function System() {
-    return (
-        <MenuComponent selctdMenu='6'>
-            <div style={{ textAlign:'left', position: 'absolute', width: '90vh', top: '50%', left: '50%', transform: 'translate(-50%, -50%)' }}>
-                Тип ЭВМ: IBM PC совместимый<br />
-                Монитор: с разрешающей способностью не ниже 800x600<br />
-                Манипулятор: мышь
-            </div>
-        </MenuComponent>
-    );
-}
-function MenuComponent({ selctdMenu, children }) {
-    const navigate = useNavigate();
-    function Single() {
-        navigate('/singleplayer'); // Навигация на другую страницу
-    }
-    function CrRoom() {
-        navigate('/createroom'); // Навигация на другую страницу
-    }
-    function Conn() {
-        navigate('/connect'); // Навигация на другую страницу
-    }
-    function ProfSt() {
-        navigate('/profset'); // Навигация на другую страницу
-    }
-    function Ruls() {
-        navigate('/rules'); // Навигация на другую страницу
-    }
-    function AbAuth() {
-        navigate('/about'); // Навигация на другую страницу
-    }
-    function Syst() {
-        navigate('/system'); // Навигация на другую страницу
-    }
-    return (
-        <header className="App-header">
-            <div className="bckgr"></div>
-            <img className="logo" src={logoimgimg} alt="Logo" />
-            <img className="logo" src={logolabelimg} alt="Logo" />
-            <div className="menuTab">
-                <label onClick={Single}>Одиночная игра</label><br />
-                <label onClick={CrRoom}>Создать комнату</label><br />
-                <label onClick={Conn}>Подключиться</label><br />
-                <label onClick={ProfSt}>Настроить профиль</label><br />
-                <label onClick={Ruls}>Правила игры</label ><br />
-                <label onClick={AbAuth}>Об авторах</label ><br />
-                <label onClick={Syst}>О системе</label ><br />
-                <label onClick={() => { localStorage.clear(); navigate('/'); }} style={{ color: 'red', cursor: 'pointer' }}>Выйти</label><br />
-            </div>
-            <SelectedMenu y={selctdMenu}></SelectedMenu>
-            <div className="menuBigTab">{children}</div>
-        </header>
-    );
-}
 function FieldEdit() {
     const navigate = useNavigate();
     const { joinRoom, joinInfo } = useMultiplayerWS();
@@ -991,6 +406,7 @@ function FieldEdit() {
         
         // --- СИНГЛПЛЕЕР ---
         const difficultyLevel = localStorage.getItem('singleplayer_difficulty') || 'MEDIUM';
+        console.log('[FieldEdit] Создание одиночной игры, токен:', localStorage.getItem('token'));
         try {
             const response = await authorizedFetch('http://localhost:8080/game/singleplayer', {
                 method: 'POST',
@@ -1002,14 +418,24 @@ function FieldEdit() {
                     difficultyLevel
                 })
             });
+            if (response.status === 403) {
+                console.log('[FieldEdit] Получен 403 при создании игры, токен недействителен');
+                localStorage.removeItem('token');
+                navigate('/');
+                setError('Сессия истекла. Пожалуйста, войдите снова.');
+                return;
+            }
             if (response.ok) {
                 const data = await response.json();
+                console.log('[FieldEdit] Игра создана:', data);
                 localStorage.setItem('singleplayer_gameId', data.id);
-                navigate('/match');
+                navigate('/singleplayer-match');
             } else {
-                setError('Ошибка создания игры: ' + response.status);
+                const errorData = await response.json().catch(() => ({}));
+                setError(errorData.message || 'Ошибка создания игры: ' + response.status);
             }
         } catch (e) {
+            console.error('[FieldEdit] Ошибка при создании игры:', e);
             setError('Ошибка соединения с сервером');
         }
     }
@@ -1018,7 +444,7 @@ function FieldEdit() {
         if (waitingJoin && joinInfo) {
             console.log('[FieldEdit] joinInfo получен:', joinInfo);
             setWaitingJoin(false);
-            navigate('/match');
+            navigate('/multiplayer-match');
         }
     }, [waitingJoin, joinInfo, navigate]);
     // --- ДОБАВЛЕНО: автоматическая расстановка ---
@@ -1046,30 +472,6 @@ function FieldEdit() {
             setAutoError('Ошибка соединения с сервером');
         }
     }
-    // --- ДОБАВЛЕНО: автоматическая игра ---
-    async function handleAutoGame() {
-        setAutoError('');
-        const difficultyLevel = localStorage.getItem('singleplayer_difficulty') || 'MEDIUM';
-        try {
-            const response = await authorizedFetch('http://localhost:8080/game/singleplayer/auto', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ difficultyLevel })
-            });
-            if (response.ok) {
-                const data = await response.json();
-                localStorage.setItem('singleplayer_gameId', data.id);
-                navigate('/match');
-            } else {
-                setAutoError('Ошибка создания авто-игры: ' + response.status);
-            }
-        } catch (e) {
-            setAutoError('Ошибка соединения с сервером');
-        }
-    }
-    useEffect(() => {
-        console.log('[FieldEdit] Монтирование компонента. multiplayer_gameCode:', localStorage.getItem('multiplayer_gameCode'), 'multiplayer_role:', localStorage.getItem('multiplayer_role'));
-    }, []);
     return (
         <header className="App-header" onMouseUp={(e) => MouseUp(e)} onMouseMove={(e) => MouseMove(e)}>
             <div className="bckgr"></div>
@@ -1092,9 +494,6 @@ function FieldEdit() {
                 <button className='fieldButt' style={{ top: '54vh' }} onClick={() => handleAutoPlace('RANDOM')}>Случайно</button>
                 <button className='fieldButt' style={{ top: '61vh' }} onClick={() => handleAutoPlace('SHORE')}>Береговой метод</button>
                 <button className='fieldButt' style={{ top: '68vh' }} onClick={() => handleAutoPlace('ASYMMETRIC')}>Ассиметричный метод</button>
-                <button className='fieldButt' style={{ top: '75vh', background: '#4caf50', color: 'white' }} onClick={handleAutoGame}>Играть автоматически</button>
-                {autoError && <div style={{ color: 'red', position: 'absolute', left: '85vh', top: '80vh' }}>{autoError}</div>}
-                {waitingJoin && <div style={{ color: 'white', position: 'absolute', left: '85vh', top: '80vh' }}>Подключение к игре...</div>}
                 <img draggable={false} alt='' onMouseDown={(e) => MouseDown(e, 9)} src={p4} style={{ height: '5.3vh', position: 'absolute', transform: ships[9].rot ? 'rotate(90deg) translate(0, -100%)' : 'rotate(0deg)', transformOrigin: 'top left', left: 3.8 + ships[9].tx * 7.7 + 'vh', top: 3.8 + ships[9].ty * 7.7 + 'vh' }}></img>
                 <img draggable={false} alt='' onMouseDown={(e) => MouseDown(e, 8)} src={p3} style={{ height: '5.3vh', position: 'absolute', transform: ships[8].rot ? 'rotate(90deg) translate(0, -100%)' : 'rotate(0deg)', transformOrigin: 'top left', left: 3.8 + ships[8].tx * 7.7 + 'vh', top: 3.8 + ships[8].ty * 7.7 + 'vh' }}></img>
                 <img draggable={false} alt='' onMouseDown={(e) => MouseDown(e, 7)} src={p3} style={{ height: '5.3vh', position: 'absolute', transform: ships[7].rot ? 'rotate(90deg) translate(0, -100%)' : 'rotate(0deg)', transformOrigin: 'top left', left: 3.8 + ships[7].tx * 7.7 + 'vh', top: 3.8 + ships[7].ty * 7.7 + 'vh' }}></img>
@@ -1127,226 +526,6 @@ function FieldEdit() {
             {error && <div style={{ color: 'red', position: 'absolute', left: '85vh', top: '80vh' }}>{error}</div>}
         </header>
     );
-}
-function MatchScreen() {
-    const navigate = useNavigate();
-    const [game, setGame] = useState(null);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState('');
-    const [moveError, setMoveError] = useState('');
-    const [moveResult, setMoveResult] = useState(null);
-    const gameId = localStorage.getItem('singleplayer_gameId');
-    const multiplayerCode = localStorage.getItem('multiplayer_gameCode');
-    const multiplayerRole = localStorage.getItem('multiplayer_role');
-    const { gameState: wsGameState, moveInfo, sendMove, requestState, error: wsError } = useMultiplayerWS();
-    const [mpGame, setMpGame] = useState(null);
-    const [mpLoading, setMpLoading] = useState(true);
-    const [mpMoveError, setMpMoveError] = useState('');
-    const [mpMoveResult, setMpMoveResult] = useState(null);
-
-    // Обработка ошибок WebSocket
-    useEffect(() => {
-        if (wsError) {
-            setError(wsError);
-        }
-    }, [wsError]);
-
-    // Запрос состояния игры для host
-    useEffect(() => {
-        if (multiplayerCode && multiplayerRole === 'host' && !mpGame) {
-            try {
-                requestState({ gameCode: multiplayerCode });
-            } catch (error) {
-                console.error('Ошибка при запросе состояния игры:', error);
-                setError('Ошибка соединения с сервером');
-            }
-        }
-    }, [multiplayerCode, multiplayerRole, mpGame, requestState]);
-
-    // Запрос состояния игры для guest
-    useEffect(() => {
-        if (multiplayerCode && multiplayerRole === 'guest' && !mpGame) {
-            try {
-                requestState({ gameCode: multiplayerCode });
-            } catch (error) {
-                console.error('Ошибка при запросе состояния игры:', error);
-                setError('Ошибка соединения с сервером');
-            }
-        }
-    }, [multiplayerCode, multiplayerRole, mpGame, requestState]);
-
-    // Обновление состояния игры при получении данных от WebSocket
-    useEffect(() => {
-        if (wsGameState) {
-            setMpGame(wsGameState);
-            setMpLoading(false);
-            setError('');
-        }
-    }, [wsGameState]);
-
-    // Обработка ходов
-    useEffect(() => {
-        if (moveInfo) {
-            setMpMoveResult(moveInfo);
-            if (moveInfo.gameState) {
-                setMpGame(moveInfo.gameState);
-            }
-            setMpMoveError('');
-        }
-    }, [moveInfo]);
-
-    // Ход игрока (multiplayer)
-    function handleMpCellClick(x, y) {
-        setMpMoveError('');
-        setMpMoveResult(null);
-        
-        if (!mpGame) {
-            setMpMoveError('Игра не загружена');
-            return;
-        }
-        
-        if (mpGame.gameState !== 'IN_PROGRESS') {
-            setMpMoveError('Игра не активна');
-            return;
-        }
-        
-        if (!mpGame.playerTurn) {
-            setMpMoveError('Не ваш ход');
-            return;
-        }
-
-        try {
-            sendMove({
-                gameCode: multiplayerCode,
-                x: x,
-                y: y
-            });
-        } catch (e) {
-            setMpMoveError('Ошибка отправки хода: ' + e.message);
-        }
-    }
-
-    // Выход из игры
-    function handleExit() {
-        localStorage.removeItem('multiplayer_gameCode');
-        localStorage.removeItem('multiplayer_role');
-        navigate('/');
-    }
-
-    // Рендер доски
-    function renderBoard(board, isEnemy, onCellClick) {
-        if (!board) return null;
-        return (
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(10,3vh)', gridTemplateRows: 'repeat(10,3vh)', gap: '0.2vh', margin: '1vh' }}>
-                {board.map((row, y) => row.map((cell, x) => {
-                    let bg = '#1e90ff';
-                    if (cell > 0 && !isEnemy) bg = '#444'; // корабль игрока
-                    if (cell === 2) bg = '#eee'; // промах
-                    if (cell === 3) bg = '#e53935'; // попадание
-                    return (
-                        <div 
-                            key={x+','+y} 
-                            onClick={isEnemy && onCellClick ? () => onCellClick(x,y) : undefined} 
-                            style={{ 
-                                width: '3vh', 
-                                height: '3vh', 
-                                background: bg, 
-                                border: '1px solid #222', 
-                                cursor: isEnemy && onCellClick ? 'pointer' : 'default' 
-                            }}
-                        />
-                    );
-                }))}
-            </div>
-        );
-    }
-
-    // Мультиплеер UI
-    if (multiplayerCode) {
-        if (mpLoading) {
-            return (
-                <div style={{ color: 'white', textAlign: 'center', marginTop: '20vh' }}>
-                    Загрузка игры...
-                </div>
-            );
-        }
-
-        if (!mpGame) {
-            return (
-                <div style={{ color: 'white', textAlign: 'center', marginTop: '20vh' }}>
-                    Ошибка загрузки игры
-                    <button onClick={handleExit} style={{ marginTop: '2vh' }}>Выйти</button>
-                </div>
-            );
-        }
-
-        return (
-            <div style={{ padding: '2vh' }}>
-                <div style={{ color: 'white', marginBottom: '2vh' }}>
-                    Код игры: {multiplayerCode}
-                    <button onClick={handleExit} style={{ marginLeft: '2vh' }}>Выйти</button>
-                </div>
-                
-                <div style={{ display: 'flex', justifyContent: 'space-around' }}>
-                    <div>
-                        <div style={{ color: 'white', marginBottom: '1vh' }}>Ваше поле</div>
-                        {mpGame.playerBoard && renderBoard(mpGame.playerBoard.board, false)}
-                    </div>
-                    <div>
-                        <div style={{ color: 'white', marginBottom: '1vh' }}>Поле противника</div>
-                        {mpGame.computerBoard && renderBoard(mpGame.computerBoard.board, true, (x,y) => {
-                            if (mpGame.gameState === 'IN_PROGRESS' && mpGame.playerTurn) {
-                                handleMpCellClick(x,y);
-                            }
-                        })}
-                    </div>
-                </div>
-
-                <div style={{ color: 'white', marginTop: '2vh' }}>
-                    Статус: {mpGame.gameState === 'IN_PROGRESS' ? 'Игра идет' : 'Ожидание'}
-                    {mpGame.gameState === 'IN_PROGRESS' && (
-                        <span style={{ marginLeft: '2vh' }}>
-                            Ход: {mpGame.playerTurn ? 'Ваш' : 'Соперника'}
-                        </span>
-                    )}
-                </div>
-
-                {mpMoveResult && (
-                    <div style={{ 
-                        color: mpMoveResult.hit ? 'green' : 'orange', 
-                        marginTop: '1vh' 
-                    }}>
-                        {mpMoveResult.hit ? 'Попадание!' : 'Промах!'}
-                        {mpMoveResult.sunk && ' Корабль потоплен!'}
-                        {mpMoveResult.gameOver && ' Игра окончена!'}
-                    </div>
-                )}
-
-                {mpMoveError && (
-                    <div style={{ color: 'red', marginTop: '1vh' }}>
-                        {mpMoveError}
-                    </div>
-                )}
-
-                {error && (
-                    <div style={{ color: 'red', marginTop: '1vh' }}>
-                        {error}
-                    </div>
-                )}
-            </div>
-        );
-    }
-
-    // ... rest of the singleplayer code ...
-}
-
-async function authorizedFetch(url, options = {}) {
-    const token = localStorage.getItem('token');
-    const headers = options.headers ? { ...options.headers } : {};
-    if (token) {
-        headers['Authorization'] = `Bearer ${token}`;
-    }
-    return fetch(url, { ...options, headers });
 }
 
 export default App;
