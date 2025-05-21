@@ -1,0 +1,43 @@
+.match-boards-container {
+    display: flex; /* Используем flexbox для горизонтального расположения */
+    justify-content: center; /* Центрируем поля по горизонтали */
+    align-items: flex-start; /* Выравнивание по верху */
+    gap: 3vh; /* Уменьшаем расстояние между полями */
+}
+
+.match-board-container {
+    position: relative;
+    width: 38vh; /* Уменьшаем ширину контейнера поля */
+    height: 38vh; /* Уменьшаем высоту контейнера поля */
+    background-color: rgba(0, 0, 0, 0.8); /* Темный полупрозрачный фон */
+    border-radius: 2vh; /* Скругленные углы */
+    padding: 2vh; /* Внутренние отступы */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Стили для сетки поля внутри match-board-container */
+.match-board-container > div:nth-child(2) { /* Выбираем второй div внутри (это сетка поля) */
+    display: grid;
+    grid-template-columns: repeat(10, 3.2vh); /* Уменьшаем размер ячеек */
+    grid-template-rows: repeat(10, 3.2vh);
+    gap: 0.1vh;
+    margin: 0 auto; /* Центрируем сетку */
+}
+
+/* Стили для ячеек сетки */
+.match-board-container .board-cell {
+     width: 3.2vh; /* Уменьшаем размер ячеек */
+     height: 3.2vh; /* Уменьшаем размер ячеек */
+     background-color: rgba(30, 144, 255, 0.5); /* Цвет пустой клетки */
+     border: 1px solid rgba(34, 34, 34, 0.5);
+     border-radius: 0.5vh;
+     transition: background-color 0.3s ease;
+     display: flex;
+     justify-content: center;
+     align-items: center;
+     color: white;
+     font-size: 2vh; /* Уменьшаем размер текста */
+} 
