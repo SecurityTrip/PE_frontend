@@ -14,10 +14,9 @@ async function authorizedFetch(url, options = {}) {
     try {
         const response = await fetch(url, { ...options, headers });
         console.log('[api] Получен ответ:', response.status);
-        
-        if (response.status === 403) {
-            console.log('[api] Получен 403, токен недействителен');
-            localStorage.removeItem('token');
+          if (response.status === 403) {
+            console.warn('[api] Получен 403, возможно, токен недействителен');
+            // localStorage.removeItem('token'); // Не удаляем токен автоматически
             throw new Error('Требуется повторная авторизация');
         }
         

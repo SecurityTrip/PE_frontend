@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { authorizedFetch } from './api';
+import { useMultiplayerWS } from './useMultiplayerWS';
 import './FieldEdit.css';
 import './components/SingleplayerMatchScreen.css';
 // Импортируем renderBoard из SingleplayerMatchScreen.js
@@ -15,32 +15,57 @@ const MultiplayerMatchScreen = () => {
     const [moveResult, setMoveResult] = useState(null);
     const gameId = localStorage.getItem('multiplayer_gameId');
 
+    const {
+        connected,
+        moveInfo,
+        gameState: wsGameState,
+        error: wsError,
+        sendMove,
+        requestState
+    } = useMultiplayerWS();
+
     useEffect(() => {
-        const fetchGame = async () => {
-            if (!gameId) {
-                setError('Идентификатор игры не найден.');
-                setLoading(false);
-                return;
-            }
-            try {
-                const response = await authorizedFetch(`http://localhost:8080/game/multiplayer/${gameId}`);
-                if (response.ok) {
-                    const data = await response.json();
-                    setGame(data);
-                } else {
-                    setError('Ошибка загрузки игры: ' + response.status);
-                }
-            } catch (e) {
-                setError('Ошибка соединения с сервером.');
-            } finally {
-                setLoading(false);
-            }
-        };
+        if (!gameId) {
+            setError('Идентификатор игры не найден.');
+            setLoading(false);
+            return;
+        }
+        // Ждём подключения WebSocket и только потом запрашиваем состояние
+        if (connected) {
+            requestState(gameId);
+        }
+    }, [gameId, connected, requestState]);
 
-        fetchGame();
-    }, [gameId]);
+    // Слушаем обновления состояния игры через WebSocket
+    useEffect(() => {
+        if (moveInfo) {
+            setMoveResult(moveInfo);
+            // После хода запрашиваем актуальное состояние игры
+            requestState(gameId);
+        }
+    }, [moveInfo, requestState, gameId]);
 
-    async function handleCellClick(x, y) {
+    useEffect(() => {
+        if (wsGameState) {
+            setGame(wsGameState);
+            setLoading(false);
+        }
+    }, [wsGameState]);
+
+    useEffect(() => {
+        if (wsError) {
+            setMoveError(wsError);
+        }
+    }, [wsError]);
+
+    // Выход из игры (мультиплеер)
+    function handleExit() {
+        localStorage.removeItem('multiplayer_gameId');
+        navigate('/multiplayer'); // Навигация обратно на выбор комнаты
+    }
+
+    // Обработка клика по клетке поля противника
+    function handleCellClick(x, y) {
         setMoveError('');
         setMoveResult(null);
         if (!game) {
@@ -51,37 +76,12 @@ const MultiplayerMatchScreen = () => {
             setMoveError('Игра не активна');
             return;
         }
-
-        try {
-            const response = await authorizedFetch(`http://localhost:8080/game/multiplayer/${gameId}/move`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ x, y })
-            });
-            if (response.ok) {
-                const data = await response.json();
-                setMoveResult(data);
-                // Обновить состояние игры после хода
-                const updatedGameResponse = await authorizedFetch(`http://localhost:8080/game/multiplayer/${gameId}`);
-                if (updatedGameResponse.ok) {
-                    const updatedGameData = await updatedGameResponse.json();
-                    setGame(updatedGameData);
-                } else {
-                    setError('Ошибка обновления состояния игры: ' + updatedGameResponse.status);
-                }
-            } else {
-                const errorData = await response.json();
-                setMoveError(errorData.message || 'Ошибка хода: ' + response.status);
-            }
-        } catch (e) {
-            setMoveError('Ошибка соединения с сервером');
+        if (!connected) {
+            setMoveError('Нет соединения с сервером');
+            return;
         }
-    }
-
-    // Выход из игры (мультиплеер)
-    function handleExit() {
-        localStorage.removeItem('multiplayer_gameId');
-        navigate('/multiplayer'); // Навигация обратно на выбор комнаты
+        // Отправляем ход через WebSocket
+        sendMove({ gameCode: gameId, x, y });
     }
 
     if (loading) {
@@ -154,11 +154,11 @@ const MultiplayerMatchScreen = () => {
                                 fontSize: '2.5vh',
                                 textAlign: 'center'
                             }}>Поле противника</div>
-                            {game && game.opponentBoard && singleRenderBoard(
-                                game.opponentBoard.board,
+                            {game && game.computerBoard && singleRenderBoard(
+                                game.computerBoard.board,
                                 true,
                                 handleCellClick,
-                                game.opponentBoard.ships // ships для противника (если есть, иначе undefined)
+                                game.computerBoard.ships // ships для противника (должен быть пустой массив)
                             )}
                         </div>
                     </div>
