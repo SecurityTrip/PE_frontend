@@ -5,7 +5,7 @@ import SockJS from 'sockjs-client';
 import './SingleplayerMatchScreen.css';
 
 // Вспомогательная функция для рендеринга доски
-function renderBoard(board, isEnemy, onCellClick, ships) {
+export function renderBoard(board, isEnemy, onCellClick, ships) {
     if (!board) return null;
 
     console.log('[renderBoard] Данные для рендеринга:', {
@@ -308,4 +308,4 @@ const SingleplayerMatchScreen = () => {
     );
 };
 
-export default SingleplayerMatchScreen; 
+export default SingleplayerMatchScreen;

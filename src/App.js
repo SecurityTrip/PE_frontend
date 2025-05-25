@@ -403,7 +403,17 @@ function FieldEdit() {
             }
             return;
         }
-        
+        // --- ДОБАВЛЕНО: обработка для host мультиплеера ---
+        if (multiplayerCode && multiplayerRole === 'host') {
+            try {
+                joinRoom({ gameCode: multiplayerCode, ships: shipsData });
+                console.log('[FieldEdit] joinRoom вызван для host');
+                setWaitingJoin(true);
+            } catch (e) {
+                setError('Ошибка запуска мультиплеерной игры: ' + e.message);
+            }
+            return;
+        }
         // --- СИНГЛПЛЕЕР ---
         const difficultyLevel = localStorage.getItem('singleplayer_difficulty') || 'MEDIUM';
         console.log('[FieldEdit] Создание одиночной игры, токен:', localStorage.getItem('token'));
@@ -462,6 +472,12 @@ function FieldEdit() {
         if (waitingJoin && joinInfo) {
             console.log('[FieldEdit] joinInfo получен:', joinInfo);
             setWaitingJoin(false);
+            // Сохраняем идентификатор игры для мультиплеерного матча
+            if (joinInfo.gameCode) {
+                localStorage.setItem('multiplayer_gameId', joinInfo.gameCode);
+            } else if (joinInfo.id) {
+                localStorage.setItem('multiplayer_gameId', joinInfo.id);
+            }
             navigate('/multiplayer-match');
         }
     }, [waitingJoin, joinInfo, navigate]);

@@ -2,45 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { authorizedFetch } from './api';
 import './FieldEdit.css';
-
-// Вспомогательная функция для рендеринга доски
-function renderBoard(board, isEnemy, onCellClick) {
-    if (!board) return null;
-    return (
-        <div style={{ 
-            display: 'grid', 
-            gridTemplateColumns: 'repeat(10, 7vh)', 
-            gridTemplateRows: 'repeat(10, 7vh)', 
-            gap: '0.2vh', 
-            margin: '1vh',
-            backgroundColor: 'rgba(0,0,0,0.5)',
-            padding: '1vh',
-            borderRadius: '1vh'
-        }}>
-            {board.map((row, y) => row.map((cell, x) => {
-                let bg = 'rgba(30,144,255,0.5)';
-                if (cell > 0 && !isEnemy) bg = 'rgba(68,68,68,0.8)'; // корабль игрока
-                if (cell === 2) bg = 'rgba(238,238,238,0.8)'; // промах
-                if (cell === 3) bg = 'rgba(229,57,53,0.8)'; // попадание
-                return (
-                    <div 
-                        key={x+','+y} 
-                        onClick={isEnemy && onCellClick ? () => onCellClick(x,y) : undefined} 
-                        style={{ 
-                            width: '7vh', 
-                            height: '7vh', 
-                            background: bg, 
-                            border: '1px solid rgba(34,34,34,0.5)', 
-                            borderRadius: '0.5vh',
-                            cursor: isEnemy && onCellClick ? 'pointer' : 'default',
-                            transition: 'background-color 0.3s ease'
-                        }}
-                    />
-                );
-            }))}
-        </div>
-    );
-}
+import './components/SingleplayerMatchScreen.css';
+// Импортируем renderBoard из SingleplayerMatchScreen.js
+import { renderBoard as singleRenderBoard } from './components/SingleplayerMatchScreen';
 
 const MultiplayerMatchScreen = () => {
     const navigate = useNavigate();
@@ -163,7 +127,6 @@ const MultiplayerMatchScreen = () => {
                         Многопользовательская игра
                         <button onClick={handleExit} className="fieldButt" style={{ marginLeft: '2vh' }}>Выйти</button>
                     </div>
-                    
                     <div style={{ 
                         display: 'flex', 
                         justifyContent: 'center',
@@ -177,7 +140,12 @@ const MultiplayerMatchScreen = () => {
                                 fontSize: '2.5vh',
                                 textAlign: 'center'
                             }}>Ваше поле</div>
-                            {game && game.playerBoard && renderBoard(game.playerBoard.board, false)}
+                            {game && game.playerBoard && singleRenderBoard(
+                                game.playerBoard.board,
+                                false,
+                                undefined,
+                                game.playerBoard.ships // ships для своего поля
+                            )}
                         </div>
                         <div>
                             <div style={{ 
@@ -186,10 +154,14 @@ const MultiplayerMatchScreen = () => {
                                 fontSize: '2.5vh',
                                 textAlign: 'center'
                             }}>Поле противника</div>
-                            {game && game.opponentBoard && renderBoard(game.opponentBoard.board, true, handleCellClick)}
+                            {game && game.opponentBoard && singleRenderBoard(
+                                game.opponentBoard.board,
+                                true,
+                                handleCellClick,
+                                game.opponentBoard.ships // ships для противника (если есть, иначе undefined)
+                            )}
                         </div>
                     </div>
-
                     <div style={{ 
                         color: 'white',
                         fontSize: '2vh',
@@ -204,7 +176,6 @@ const MultiplayerMatchScreen = () => {
                                 </span>
                             )}
                         </div>
-
                         {moveResult && (
                             <div style={{ 
                                 color: moveResult.hit ? '#4caf50' : '#ff9800', 
@@ -216,7 +187,6 @@ const MultiplayerMatchScreen = () => {
                                 {moveResult.gameOver && ' Игра окончена!'}
                             </div>
                         )}
-
                         {moveError && (
                             <div style={{ 
                                 color: '#f44336', 
@@ -226,7 +196,6 @@ const MultiplayerMatchScreen = () => {
                                 {moveError}
                             </div>
                         )}
-
                         {error && gameId && (
                             <div style={{ 
                                 color: '#f44336', 
@@ -243,4 +212,4 @@ const MultiplayerMatchScreen = () => {
     );
 };
 
-export default MultiplayerMatchScreen; 
+export default MultiplayerMatchScreen;
