@@ -50,5 +50,31 @@ async function handleClick() {
     }
     
     // --- СИНГЛПЛЕЕР ---
+    // Очищаем мультиплеерные ключи, чтобы не было конфликтов
+    localStorage.removeItem('multiplayer_gameCode');
+    localStorage.removeItem('multiplayer_role');
+    localStorage.removeItem('multiplayer_gameId');
+
     const difficultyLevel = localStorage.getItem('singleplayer_difficulty') || 'MEDIUM';
-} 
+    try {
+        // Отправляем запрос на создание singleplayer игры
+        const response = await authorizedFetch('http://localhost:8080/game/singleplayer', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                ships: shipsData,
+                difficulty: difficultyLevel
+            })
+        });
+        if (response.ok) {
+            const data = await response.json();
+            localStorage.setItem('singleplayer_gameId', data.id);
+            navigate('/singleplayer-match');
+        } else {
+            const errorData = await response.json();
+            setError(errorData.message || 'Ошибка создания одиночной игры: ' + response.status);
+        }
+    } catch (e) {
+        setError('Ошибка соединения с сервером');
+    }
+}
