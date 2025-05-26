@@ -1,0 +1,49 @@
+.cell {
+    width: 40px;
+    height: 40px;
+    border: 1px solid #ccc;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.cell:hover {
+    background-color: rgba(0, 0, 0, 0.1);
+}
+
+.cell.ship {
+    background-color: #4a90e2;
+}
+
+.cell.miss {
+    background-color: #e0e0e0;
+    color: #666;
+}
+
+.cell.hit {
+    background-color: #e74c3c;
+    color: white;
+}
+
+.cell.ship.hit {
+    background-color: #c0392b;
+}
+
+/* Стили для соседних клеток потопленного корабля */
+.cell.miss.adjacent {
+    background-color: #f5f5f5;
+    border: 1px dashed #ccc;
+}
+
+/* Анимация для попаданий */
+@keyframes hitAnimation {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.2); }
+    100% { transform: scale(1); }
+}
+
+.cell.hit {
+    animation: hitAnimation 0.3s ease-in-out;
+} 

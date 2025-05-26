@@ -113,7 +113,79 @@ const MultiplayerMatchScreen = () => {
         sendMove({ gameCode: gameId, x, y, userId });
     }
 
+    const renderCell = (x, y, value, isPlayerBoard) => {
+        let cellClass = 'cell';
+        let cellContent = '';
 
+        if (isPlayerBoard) {
+            // Для доски игрока
+            if (value === 1) {
+                cellClass += ' ship';
+            } else if (value === 2) {
+                cellClass += ' miss';
+                cellContent = '•';
+            } else if (value === 3) {
+                cellClass += ' hit';
+                cellContent = '×';
+            }
+        } else {
+            // Для доски противника
+            if (value === 2) {
+                cellClass += ' miss';
+                // Проверяем, является ли эта клетка соседней для потопленного корабля
+                if (isAdjacentToSunkShip(x, y)) {
+                    cellClass += ' adjacent';
+                }
+                cellContent = '•';
+            } else if (value === 3) {
+                cellClass += ' hit';
+                cellContent = '×';
+            }
+        }
+
+        return (
+            <div
+                key={`${x}-${y}`}
+                className={cellClass}
+                onClick={() => !isPlayerBoard && handleCellClick(x, y)}
+            >
+                {cellContent}
+            </div>
+        );
+    };
+
+    // Функция для проверки, является ли клетка соседней для потопленного корабля
+    const isAdjacentToSunkShip = (x, y) => {
+        if (!game || !game.computerBoard || !game.computerBoard.ships) return false;
+
+        const board = game.computerBoard.board;
+        const ships = game.computerBoard.ships;
+
+        // Проверяем все корабли
+        for (const ship of ships) {
+            if (ship.sunk) {
+                // Проверяем все клетки корабля
+                for (const pos of ship.positions) {
+                    const shipX = pos[0];
+                    const shipY = pos[1];
+                    
+                    // Проверяем соседние клетки
+                    for (let dx = -1; dx <= 1; dx++) {
+                        for (let dy = -1; dy <= 1; dy++) {
+                            const nx = shipX + dx;
+                            const ny = shipY + dy;
+                            
+                            // Если это текущая клетка и она помечена как промах
+                            if (nx === x && ny === y && board[ny][nx] === 2) {
+                                return true;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        return false;
+    };
 
     if (loading && !game) {
         return (
