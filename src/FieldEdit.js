@@ -59,7 +59,24 @@ function FieldEdit(props) {
         if (response.ok) {
             const data = await response.json();
             localStorage.setItem('singleplayer_gameId', data.id);
-            navigate('/singleplayer-match');
+            
+            // Запускаем игру после создания
+            try {
+                const startResponse = await authorizedFetch(`http://localhost:8080/game/start/${data.id}`, {
+                    method: 'POST'
+                });
+
+                if (startResponse.ok) {
+                    console.log('[FieldEdit] Игра успешно запущена');
+                    navigate('/singleplayer-match');
+                } else {
+                    const startErrorData = await startResponse.json().catch(() => ({}));
+                    setError(startErrorData.message || 'Ошибка запуска игры: ' + startResponse.status);
+                }
+            } catch (startError) {
+                console.error('[FieldEdit] Ошибка при запуске игры:', startError);
+                setError('Ошибка соединения с сервером при запуске игры');
+            }
         } else {
             const errorData = await response.json();
             setError(errorData.message || 'Ошибка создания одиночной игры: ' + response.status);

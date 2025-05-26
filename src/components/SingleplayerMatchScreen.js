@@ -163,6 +163,11 @@ const SingleplayerMatchScreen = () => {
             return;
         }
 
+        if (!game.playerTurn) {
+            setMoveError('Сейчас ход компьютера');
+            return;
+        }
+
         setMoveError('');
         setMoveResult(null);
 
@@ -262,7 +267,7 @@ const SingleplayerMatchScreen = () => {
                     marginTop: '3vh'
                 }}>
                     <div style={{ marginBottom: '1vh' }}>
-                        Статус: {game && game.gameState === 'IN_PROGRESS' ? 'Игра идет' : (game && game.gameState === 'PLAYER_WINS' ? 'Вы выиграли!' : (game && game.gameState === 'COMPUTER_WINS' ? 'ИИ выиграл' : 'Завершена'))}
+                        Статус: {game && game.gameState === 'IN_PROGRESS' ? 'Игра идет' : (game && game.gameState === 'PLAYER_WON' ? 'Вы выиграли!' : (game && game.gameState === 'COMPUTER_WON' ? 'ИИ выиграл' : 'Завершена'))}
                         {game && game.gameState === 'IN_PROGRESS' && (
                             <span style={{ marginLeft: '2vh' }}>
                                 Ход: {game.playerTurn ? 'Ваш' : 'ИИ'}
