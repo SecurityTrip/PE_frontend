@@ -41,6 +41,10 @@ export function useMultiplayerWS() {
                 console.log('[useMultiplayerWS] Получен /topic/multiplayer/code:', msg.body);
                 try {
                     const data = JSON.parse(msg.body);
+                    // Сохраняем gameCode в localStorage для синхронизации с backend
+                    if (data && data.gameCode) {
+                        localStorage.setItem('multiplayer_gameId', data.gameCode);
+                    }
                     setRoomCode(data);
                     setError(null);
                 } catch (e) {
@@ -53,6 +57,10 @@ export function useMultiplayerWS() {
                 console.log('[useMultiplayerWS] Получен /topic/multiplayer/join:', msg.body);
                 try {
                     const data = JSON.parse(msg.body);
+                    // Сохраняем gameCode в localStorage для синхронизации с backend
+                    if (data && data.gameCode) {
+                        localStorage.setItem('multiplayer_gameId', data.gameCode);
+                    }
                     setJoinInfo(data);
                     setError(null);
                 } catch (e) {
@@ -73,15 +81,31 @@ export function useMultiplayerWS() {
                 }
             });
 
-            client.subscribe('/topic/multiplayer/state', msg => {
-                console.log('[useMultiplayerWS] Получен /topic/multiplayer/state:', msg.body);
+            client.subscribe('/user/topic/multiplayer/state', msg => {
+                console.log('[useMultiplayerWS] Получен /user/topic/multiplayer/state:', msg.body);
                 try {
                     const data = JSON.parse(msg.body);
-                    setGameState(data);
-                    setError(null);
+                    console.log('[useMultiplayerWS] Распарсили gameState:', data);
+                    // Проверяем наличие ключевых полей и их структуру
+                    let missing = [];
+                    if (!data) missing.push('data');
+                    if (!data.playerBoard) missing.push('playerBoard');
+                    if (!data.computerBoard) missing.push('computerBoard');
+                    if (!data.gameState) missing.push('gameState');
+                    if (!data.gameCode) missing.push('gameCode');
+                    // Дополнительно проверяем board и ships
+                    if (data.playerBoard && (!Array.isArray(data.playerBoard.board) || typeof data.playerBoard.computer !== 'boolean')) missing.push('playerBoard.board/computer');
+                    if (data.computerBoard && (!Array.isArray(data.computerBoard.board) || typeof data.computerBoard.computer !== 'boolean')) missing.push('computerBoard.board/computer');
+                    if (missing.length === 0) {
+                        setGameState(data);
+                        setError(null);
+                    } else {
+                        console.error('[useMultiplayerWS] Получено неполное или некорректное состояние игры:', data, 'Отсутствуют/невалидны:', missing);
+                        setError('Некорректное состояние игры: ' + missing.join(', '));
+                    }
                 } catch (e) {
-                    console.error('[useMultiplayerWS] Ошибка парсинга state:', e);
-                    setError('Ошибка обработки состояния игры');
+                    console.error('[useMultiplayerWS] Ошибка парсинга state:', e, msg.body);
+                    setError('Ошибка обработки состояния игры: ' + e);
                 }
             });
 
@@ -159,12 +183,14 @@ export function useMultiplayerWS() {
         }
     }
 
-    function requestState(payload) {
+    function requestState(gameCode) {
         if (!clientRef.current || !connected) {
             setError('Нет соединения с сервером');
             return;
         }
         try {
+            const userId = localStorage.getItem('userId');
+            const payload = { gameCode, userId };
             console.log('[useMultiplayerWS] requestState отправка:', payload);
             clientRef.current.publish({ destination: '/app/multiplayer.state', body: JSON.stringify(payload) });
         } catch (e) {
@@ -185,4 +211,4 @@ export function useMultiplayerWS() {
         sendMove,
         requestState
     };
-} 
+}

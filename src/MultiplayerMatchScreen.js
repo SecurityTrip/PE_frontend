@@ -32,6 +32,8 @@ const MultiplayerMatchScreen = () => {
         }
         // Ждём подключения WebSocket и только потом запрашиваем состояние
         if (connected) {
+            // setGame(null); // НЕ сбрасываем game, чтобы не было мерцания
+            setLoading(true);
             requestState(gameId);
         }
     }, [gameId, connected, requestState]);
@@ -45,12 +47,20 @@ const MultiplayerMatchScreen = () => {
         }
     }, [moveInfo, requestState, gameId]);
 
-    useEffect(() => {
-        if (wsGameState) {
-            setGame(wsGameState);
-            setLoading(false);
-        }
-    }, [wsGameState]);
+useEffect(() => {
+    // Всегда убираем loading, если есть wsGameState (даже если он не меняется по ссылке)
+    if (wsGameState && wsGameState.playerBoard && wsGameState.computerBoard && wsGameState.gameState && wsGameState.gameCode) {
+        setGame(wsGameState);
+        setLoading(false);
+        setError('');
+    } else if (wsGameState) {
+        setError('Получено неполное состояние игры');
+        setLoading(false);
+    } else if (connected && !wsGameState) {
+        setError('Не удалось загрузить состояние игры. Попробуйте обновить страницу.');
+        setLoading(false);
+    }
+}, [wsGameState, connected]);
 
     useEffect(() => {
         if (wsError) {
@@ -84,12 +94,23 @@ const MultiplayerMatchScreen = () => {
         sendMove({ gameCode: gameId, x, y });
     }
 
-    if (loading) {
+
+    if (loading && !game) {
+        // Для отладки: показываем userId из localStorage и id из wsGameState
+        const localUserId = localStorage.getItem('userId');
         return (
             <header className="App-header">
                 <div className="bckgr"></div>
                 <div className="fieldEditBigTab" style={{ textAlign: 'center', paddingTop: '20vh' }}>
                     <div style={{ color: 'white', fontSize: '3vh' }}>Загрузка игры...</div>
+                    <div style={{ color: 'orange', fontSize: '2vh', marginTop: '1vh' }}>
+                        <b>userId (localStorage):</b> {localUserId || 'нет'}<br/>
+                        <b>gameState.id:</b> {wsGameState && wsGameState.id ? wsGameState.id : 'нет'}
+                    </div>
+                    {/* DEBUG: wsGameState */}
+                    <pre style={{color: 'yellow', fontSize: '1.5vh', marginTop: '2vh'}}>
+                        {wsGameState ? JSON.stringify(wsGameState, null, 2) : 'Нет wsGameState'}
+                    </pre>
                 </div>
             </header>
         );
@@ -127,8 +148,13 @@ const MultiplayerMatchScreen = () => {
                         Многопользовательская игра
                         <button onClick={handleExit} className="fieldButt" style={{ marginLeft: '2vh' }}>Выйти</button>
                     </div>
+                    {/* DEBUG: userId и gameState.id */}
+                    <div style={{ color: 'orange', fontSize: '2vh', marginTop: '1vh' }}>
+                        <b>userId (localStorage):</b> {localStorage.getItem('userId') || 'нет'}<br/>
+                        <b>gameState.id:</b> {game && game.id ? game.id : 'нет'}
+                    </div>
                     <div style={{ 
-                        display: 'flex', 
+                        display: 'flex',
                         justifyContent: 'center',
                         alignItems: 'flex-start',
                         gap: '5vh'

@@ -43,8 +43,14 @@ function CreateRoom() {
             return;
         }
         try {
-            // Создаем комнату через WebSocket
-            createRoom({ ships });
+            // Генерируем или берём userId из localStorage
+            let userId = Number(localStorage.getItem('userId'));
+            if (!userId) {
+                userId = Date.now() + Math.floor(Math.random()*1000);
+                localStorage.setItem('userId', userId);
+            }
+            // Создаем комнату через WebSocket, передаём userId
+            createRoom({ ships, userId });
         } catch (e) {
             setError('Ошибка создания комнаты: ' + e.message);
         }
@@ -125,4 +131,4 @@ function CreateRoom() {
     );
 }
 
-export default CreateRoom; 
+export default CreateRoom;

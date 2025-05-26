@@ -395,7 +395,12 @@ function FieldEdit() {
         
         if (multiplayerCode && multiplayerRole === 'guest') {
             try {
-                joinRoom({ gameCode: multiplayerCode, ships: shipsData });
+                let userId = Number(localStorage.getItem('userId'));
+                if (!userId) {
+                    userId = Date.now() + Math.floor(Math.random()*1000);
+                    localStorage.setItem('userId', userId);
+                }
+                joinRoom({ gameCode: multiplayerCode, ships: shipsData, userId });
                 console.log('[FieldEdit] joinRoom вызван');
                 setWaitingJoin(true);
             } catch (e) {
@@ -403,17 +408,16 @@ function FieldEdit() {
             }
             return;
         }
-        // --- ДОБАВЛЕНО: обработка для host мультиплеера ---
+        // Для host: просто ждём второго игрока, не вызываем joinRoom
         if (multiplayerCode && multiplayerRole === 'host') {
-            try {
-                joinRoom({ gameCode: multiplayerCode, ships: shipsData });
-                console.log('[FieldEdit] joinRoom вызван для host');
-                setWaitingJoin(true);
-            } catch (e) {
-                setError('Ошибка запуска мультиплеерной игры: ' + e.message);
-            }
+            setWaitingJoin(true); // Показываем экран ожидания
             return;
         }
+        // --- СИНГЛПЛЕЕР ---
+        // Очищаем мультиплеерные ключи, чтобы не было конфликтов
+        localStorage.removeItem('multiplayer_gameCode');
+        localStorage.removeItem('multiplayer_role');
+        localStorage.removeItem('multiplayer_gameId');
         // --- СИНГЛПЛЕЕР ---
         const difficultyLevel = localStorage.getItem('singleplayer_difficulty') || 'MEDIUM';
         console.log('[FieldEdit] Создание одиночной игры, токен:', localStorage.getItem('token'));
@@ -505,6 +509,16 @@ function FieldEdit() {
         } catch (e) {
             setAutoError('Ошибка соединения с сервером');
         }
+    }
+    // В рендере добавить экран ожидания для host
+    const multiplayerRole = localStorage.getItem('multiplayer_role');
+    if (waitingJoin && multiplayerRole === 'host') {
+        return (
+            <div className="waiting-guest-screen">
+                <h2>Ожидание второго игрока...</h2>
+                <p>Передайте код комнаты другу и дождитесь его подключения.</p>
+            </div>
+        );
     }
     return (
         <header className="App-header" onMouseUp={(e) => MouseUp(e)} onMouseMove={(e) => MouseMove(e)}>
