@@ -1,4 +1,3 @@
-
 import { useState, useRef, useEffect } from 'react';
 import { Client } from '@stomp/stompjs';
 import SockJS from 'sockjs-client';
@@ -19,11 +18,16 @@ export function useMultiplayerWS() {
             const gameCode = localStorage.getItem('multiplayer_gameId');
             const userId = localStorage.getItem('userId');
             if (gameCode && userId) {
-                requestState(gameCode);
+                // Проверяем, что игра активна и это не наш ход
+                if (gameState && 
+                    gameState.gameState === 'IN_PROGRESS' && 
+                    !gameState.playerTurn) { // Запрашиваем состояние только когда не наш ход
+                    requestState(gameCode);
+                }
             }
-        }, 500);
+        }, 5000); // Увеличиваем интервал до 5 секунд
         return () => clearInterval(interval);
-    }, [connected]);
+    }, [connected, gameState]);
 
     useEffect(() => {
         const token = localStorage.getItem('token');
