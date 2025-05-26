@@ -81,4 +81,9 @@
 
 .fieldButt:hover {
     background: rgba(30, 144, 255, 1);
-} 
+}
+
+/* Добавляем стили для обводки потопленных кораблей противника */
+.board-cell.hit.sunk-enemy-ship-cell {
+    border: 2px solid red !important; /* Обводка для подбитых клеток потопленных кораблей */
+}

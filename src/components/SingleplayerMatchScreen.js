@@ -27,15 +27,51 @@ export function renderBoard(board, isEnemy, onCellClick, ships) {
         return false;
     };
 
+    // --- Исправление: вычисляем sunk для кораблей, если его нет ---
+    let shipsWithSunk = ships;
+    if (ships && ships.length > 0 && typeof ships[0].sunk === 'undefined') {
+        shipsWithSunk = ships.map(ship => ({
+            ...ship,
+            sunk: Array.isArray(ship.hits) && ship.hits.length === ship.size && ship.hits.every(Boolean)
+        }));
+    }
+
+    // Helper to check if a cell is adjacent to a sunk ship
+    const isAdjacentToSunkShip = (cellX, cellY, shipsArg) => {
+        const shipsLocal = shipsArg || shipsWithSunk;
+        if (!shipsLocal) return false;
+        for (const ship of shipsLocal) {
+            if (ship.sunk) {
+                // Проверяем все клетки корабля
+                for (let i = 0; i < ship.size; i++) {
+                    const shipPartX = ship.horizontal ? ship.x + i : ship.x;
+                    const shipPartY = ship.horizontal ? ship.y : ship.y + i;
+                    // Проверяем все соседние клетки
+                    for (let dx = -1; dx <= 1; dx++) {
+                        for (let dy = -1; dy <= 1; dy++) {
+                            const nx = shipPartX + dx;
+                            const ny = shipPartY + dy;
+                            // Если это текущая клетка и она не является частью корабля
+                            if (nx === cellX && ny === cellY && !isShipCell(cellX, cellY, ship)) {
+                                return true;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        return false;
+    };
+
     return (
         <div className="board-grid">
             {board.map((row, y) => row.map((cell, x) => {
                 let cellClass = 'board-cell';
                 let content = null;
-                
-                if (!isEnemy && ships) {
+                const shipsToUse = shipsWithSunk;
+                if (!isEnemy && shipsToUse) {
                     // Логика для поля игрока
-                    for (const ship of ships) {
+                    for (const ship of shipsToUse) {
                         if (isShipCell(x, y, ship)) {
                             cellClass += ' player-ship-cell';
                             // Проверяем, подбита ли эта часть корабля
@@ -57,12 +93,22 @@ export function renderBoard(board, isEnemy, onCellClick, ships) {
                 }
 
                 // Обработка попаданий и промахов для обоих полей
-                if (cell === 2) { // Промах
+                if (cell === 2 || (isEnemy && isAdjacentToSunkShip(x, y, shipsToUse))) { // Промах или клетка рядом с потопленным кораблем
                     cellClass += ' miss';
                     content = 'X';
                 } else if (cell === 3) { // Попадание
                     cellClass += ' hit';
                     content = '●';
+
+                    // Если это поле противника и клетка является частью потопленного корабля
+                    if (isEnemy && shipsToUse) {
+                        for (const ship of shipsToUse) {
+                            if (ship.sunk && isShipCell(x, y, ship)) {
+                                cellClass += ' sunk-enemy-ship-cell';
+                                break;
+                            }
+                        }
+                    }
                 }
 
                 return (
