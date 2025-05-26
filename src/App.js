@@ -60,7 +60,7 @@ function App() {
 
 function FieldEdit() {
     const navigate = useNavigate();
-    const { joinRoom, joinInfo } = useMultiplayerWS();
+    const { joinRoom, joinInfo, placeHostShips } = useMultiplayerWS();
     const [movinShip, setMS] = useState(-1);
     const [mos, setMos] = useState(null);
     const [autoError, setAutoError] = useState('');
@@ -408,9 +408,18 @@ function FieldEdit() {
             }
             return;
         }
-        // Для host: просто ждём второго игрока, не вызываем joinRoom
         if (multiplayerCode && multiplayerRole === 'host') {
-            setWaitingJoin(true); // Показываем экран ожидания
+            try {
+                let userId = Number(localStorage.getItem('userId'));
+                if (!userId) {
+                    userId = Date.now() + Math.floor(Math.random()*1000);
+                    localStorage.setItem('userId', userId);
+                }
+                placeHostShips({ gameCode: multiplayerCode, ships: shipsData, userId });
+                setWaitingJoin(true); // Ожидание второго игрока
+            } catch (e) {
+                setError('Ошибка размещения кораблей: ' + e.message);
+            }
             return;
         }
         // --- СИНГЛПЛЕЕР ---

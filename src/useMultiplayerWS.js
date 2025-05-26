@@ -1,3 +1,4 @@
+
 import { useState, useRef, useEffect } from 'react';
 import { Client } from '@stomp/stompjs';
 import SockJS from 'sockjs-client';
@@ -10,6 +11,19 @@ export function useMultiplayerWS() {
     const [gameState, setGameState] = useState(null);
     const [error, setError] = useState(null);
     const clientRef = useRef(null);
+
+    // --- POLLING GAME STATE ---
+    useEffect(() => {
+        if (!connected) return;
+        let interval = setInterval(() => {
+            const gameCode = localStorage.getItem('multiplayer_gameId');
+            const userId = localStorage.getItem('userId');
+            if (gameCode && userId) {
+                requestState(gameCode);
+            }
+        }, 500);
+        return () => clearInterval(interval);
+    }, [connected]);
 
     useEffect(() => {
         const token = localStorage.getItem('token');
@@ -199,19 +213,6 @@ export function useMultiplayerWS() {
         }
     }
     
-    function placeHostShips(payload) {
-    if (!clientRef.current || !connected) {
-        setError('Нет соединения с сервером');
-        return;
-    }
-    try {
-        console.log('[useMultiplayerWS] placeHostShips отправка:', payload);
-        clientRef.current.publish({ destination: '/app/multiplayer.place', body: JSON.stringify(payload) });
-    } catch (e) {
-        console.error('[useMultiplayerWS] Ошибка отправки placeHostShips:', e);
-        setError('Ошибка размещения кораблей хоста');
-    }
-    }
     // Отправка кораблей хоста после создания комнаты
     function placeHostShips(payload) {
         if (!clientRef.current || !connected) {
