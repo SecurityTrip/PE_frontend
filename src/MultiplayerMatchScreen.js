@@ -1,9 +1,9 @@
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useMultiplayerWS } from './useMultiplayerWS';
 import './FieldEdit.css';
 import './components/SingleplayerMatchScreen.css';
-// Импортируем renderBoard из SingleplayerMatchScreen.js
 import { renderBoard as singleRenderBoard } from './components/SingleplayerMatchScreen';
 
 const MultiplayerMatchScreen = () => {
@@ -24,43 +24,53 @@ const MultiplayerMatchScreen = () => {
         requestState
     } = useMultiplayerWS();
 
+
+    // Сброс состояния и запуск загрузки только при смене gameId (новая игра)
     useEffect(() => {
         if (!gameId) {
             setError('Идентификатор игры не найден.');
             setLoading(false);
             return;
         }
-        // Ждём подключения WebSocket и только потом запрашиваем состояние
-        if (connected) {
+        // setLoading(true); // Не сбрасываем loading/game если gameId не меняется
+        // setGame(null);
+    }, [gameId]);
+
+
+    // Запрашиваем состояние только когда появилось соединение и есть gameId, но не сбрасываем loading/game
+    useEffect(() => {
+        if (connected && gameId) {
             requestState(gameId);
         }
-    }, [gameId, connected, requestState]);
+    }, [connected, gameId, requestState]);
 
-    // Слушаем обновления состояния игры через WebSocket
+
+    // Слушаем обновления результата хода через WebSocket
     useEffect(() => {
         if (moveInfo) {
             setMoveResult(moveInfo);
-            // После хода запрашиваем актуальное состояние игры
-            requestState(gameId);
+            // Не делаем requestState(gameId) — wsGameState должен обновиться через WebSocket
         }
-    }, [moveInfo, requestState, gameId]);
+    }, [moveInfo]);
+
 
     useEffect(() => {
-        if (wsGameState) {
-            // Проверяем наличие всех необходимых полей
-            if (wsGameState.playerBoard && wsGameState.computerBoard && wsGameState.gameState && wsGameState.gameCode) {
-                setGame(wsGameState);
-                setLoading(false);
-                setError('');
-            } else {
-                setError('Получено неполное состояние игры');
-                setLoading(false);
-            }
+        // Всегда убираем loading, если есть wsGameState (даже если он не меняется по ссылке)
+        if (wsGameState && wsGameState.playerBoard && wsGameState.computerBoard && wsGameState.gameState && wsGameState.gameCode) {
+            setGame(wsGameState);
+            setLoading(false);
+            setError('');
+            // moveResult сбрасываем только если статус игры изменился (например, после хода)
+            // setMoveResult(null); // Оставляем результат выстрела до следующего хода
+        } else if (wsGameState) {
+            setError('Получено неполное состояние игры');
+            setLoading(false);
         } else if (connected && !wsGameState) {
             setError('Не удалось загрузить состояние игры. Попробуйте обновить страницу.');
             setLoading(false);
         }
     }, [wsGameState, connected]);
+
 
     useEffect(() => {
         if (wsError) {
@@ -68,21 +78,22 @@ const MultiplayerMatchScreen = () => {
         }
     }, [wsError]);
 
+
     // Выход из игры (мультиплеер)
     function handleExit() {
         localStorage.removeItem('multiplayer_gameId');
         navigate('/multiplayer'); // Навигация обратно на выбор комнаты
     }
 
-    // Обработка клика по клетке поля противника
+    // Обработка клика по клетке поля противника (используем wsGameState для актуальности)
     function handleCellClick(x, y) {
         setMoveError('');
         setMoveResult(null);
-        if (!game) {
+        if (!wsGameState) {
             setMoveError('Игра не загружена');
             return;
         }
-        if (game.gameState !== 'IN_PROGRESS') {
+        if (wsGameState.gameState !== 'IN_PROGRESS') {
             setMoveError('Игра не активна');
             return;
         }
@@ -90,9 +101,19 @@ const MultiplayerMatchScreen = () => {
             setMoveError('Нет соединения с сервером');
             return;
         }
-        // Отправляем ход через WebSocket
-        sendMove({ gameCode: gameId, x, y });
+        if (!wsGameState.playerTurn) {
+            setMoveError('Сейчас не ваш ход');
+            return;
+        }
+        // Для мультиплеера ОБЯЗАТЕЛЬНО нужен userId в payload!
+        let userId = Number(localStorage.getItem('userId'));
+        if (!userId) {
+            userId = Date.now() + Math.floor(Math.random()*1000);
+            localStorage.setItem('userId', userId);
+        }
+        sendMove({ gameCode: gameId, x, y, userId });
     }
+
 
 
     if (loading && !game) {
@@ -105,6 +126,7 @@ const MultiplayerMatchScreen = () => {
             </header>
         );
     }
+
 
     if (error) {
         return (
@@ -151,11 +173,11 @@ const MultiplayerMatchScreen = () => {
                                 fontSize: '2.5vh',
                                 textAlign: 'center'
                             }}>Ваше поле</div>
-                            {game && game.playerBoard && singleRenderBoard(
-                                game.playerBoard.board,
+                            {wsGameState && wsGameState.playerBoard && singleRenderBoard(
+                                wsGameState.playerBoard.board,
                                 false,
                                 undefined,
-                                game.playerBoard.ships // ships для своего поля
+                                wsGameState.playerBoard.ships // ships для своего поля
                             )}
                         </div>
                         <div>
@@ -164,13 +186,45 @@ const MultiplayerMatchScreen = () => {
                                 marginBottom: '1.5vh',
                                 fontSize: '2.5vh',
                                 textAlign: 'center'
-                            }}>Поле противника</div>
-                            {game && game.computerBoard && singleRenderBoard(
-                                game.computerBoard.board,
-                                true,
-                                handleCellClick,
-                                game.computerBoard.ships // ships для противника (должен быть пустой массив)
-                            )}
+                            }}>
+                                Поле противника
+                                {wsGameState && (
+                                    <span style={{
+                                        marginLeft: '1vh',
+                                        color: wsGameState.playerTurn ? '#4caf50' : '#ff9800',
+                                        fontWeight: 'bold',
+                                        fontSize: '2vh'
+                                    }}>
+                                        {wsGameState.playerTurn ? 'Ваш ход!' : 'Ждите противника'}
+                                    </span>
+                                )}
+                            </div>
+                            <div
+                                style={{
+                                    border: wsGameState?.playerTurn ? '3px solid #4caf50' : '3px solid #ff9800',
+                                    borderRadius: '10px',
+                                    opacity: wsGameState?.playerTurn ? 1 : 0.6,
+                                    pointerEvents: wsGameState?.playerTurn ? 'auto' : 'none',
+                                    transition: 'border 0.2s, opacity 0.2s',
+                                    position: 'relative'
+                                }}
+                            >
+                                {wsGameState && wsGameState.computerBoard && singleRenderBoard(
+                                    wsGameState.computerBoard.board,
+                                    true,
+                                    wsGameState.playerTurn ? handleCellClick : undefined,
+                                    wsGameState.computerBoard.ships // ships для противника (должен быть пустой массив)
+                                )}
+                                {!wsGameState?.playerTurn && (
+                                    <div style={{
+                                        position: 'absolute',
+                                        top: 0, left: 0, right: 0, bottom: 0,
+                                        background: 'rgba(0,0,0,0.15)',
+                                        borderRadius: '10px',
+                                        zIndex: 2
+                                    }} />
+                                )}
+                            </div>
                         </div>
                     </div>
                     <div style={{ 
@@ -180,10 +234,10 @@ const MultiplayerMatchScreen = () => {
                         marginTop: '2vh'
                     }}>
                         <div style={{ marginBottom: '1vh' }}>
-                            Статус: {game && game.gameState === 'IN_PROGRESS' ? 'Игра идет' : (game && game.gameState === 'PLAYER_WINS' ? 'Вы выиграли!' : (game && game.gameState === 'OPPONENT_WINS' ? 'Противник выиграл' : 'Завершена'))}
-                            {game && game.gameState === 'IN_PROGRESS' && (
+                            Статус: {wsGameState && wsGameState.gameState === 'IN_PROGRESS' ? 'Игра идет' : (wsGameState && wsGameState.gameState === 'PLAYER_WINS' ? 'Вы выиграли!' : (wsGameState && wsGameState.gameState === 'OPPONENT_WINS' ? 'Противник выиграл' : 'Завершена'))}
+                            {wsGameState && wsGameState.gameState === 'IN_PROGRESS' && (
                                 <span style={{ marginLeft: '2vh' }}>
-                                    Ход: {game.playerTurn ? 'Ваш' : 'Противника'}
+                                    Ход: {wsGameState.playerTurn ? 'Ваш' : 'Противника'}
                                 </span>
                             )}
                         </div>
