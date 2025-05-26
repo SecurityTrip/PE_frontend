@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useMultiplayerWS } from './useMultiplayerWS';
@@ -243,13 +242,13 @@ const MultiplayerMatchScreen = () => {
                         </div>
                         {moveResult && (
                             <div style={{ 
-                                color: moveResult.hit ? '#4caf50' : '#ff9800', 
+                                color: moveResult.lastMoveHit ? '#4caf50' : '#ff9800', 
                                 marginTop: '1vh',
                                 fontSize: '2.2vh'
                             }}>
-                                {moveResult.hit ? 'Попадание!' : 'Промах!'}
-                                {moveResult.sunk && ' Корабль потоплен!'}
-                                {moveResult.gameOver && ' Игра окончена!'}
+                                {moveResult.lastMoveHit ? 'Попадание!' : 'Промах!'}
+                                {moveResult.lastMoveSunk && ' Корабль потоплен!'}
+                                {moveResult.lastMoveGameOver && ' Игра окончена!'}
                             </div>
                         )}
                         {moveError && (
