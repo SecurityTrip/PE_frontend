@@ -198,6 +198,34 @@ export function useMultiplayerWS() {
             setError('Ошибка запроса состояния игры');
         }
     }
+    
+    function placeHostShips(payload) {
+    if (!clientRef.current || !connected) {
+        setError('Нет соединения с сервером');
+        return;
+    }
+    try {
+        console.log('[useMultiplayerWS] placeHostShips отправка:', payload);
+        clientRef.current.publish({ destination: '/app/multiplayer.place', body: JSON.stringify(payload) });
+    } catch (e) {
+        console.error('[useMultiplayerWS] Ошибка отправки placeHostShips:', e);
+        setError('Ошибка размещения кораблей хоста');
+    }
+    }
+    // Отправка кораблей хоста после создания комнаты
+    function placeHostShips(payload) {
+        if (!clientRef.current || !connected) {
+            setError('Нет соединения с сервером');
+            return;
+        }
+        try {
+            console.log('[useMultiplayerWS] placeHostShips отправка:', payload);
+            clientRef.current.publish({ destination: '/app/multiplayer.place', body: JSON.stringify(payload) });
+        } catch (e) {
+            console.error('[useMultiplayerWS] Ошибка отправки placeHostShips:', e);
+            setError('Ошибка размещения кораблей хоста');
+        }
+    }
 
     return {
         connected,
@@ -209,6 +237,7 @@ export function useMultiplayerWS() {
         createRoom,
         joinRoom,
         sendMove,
-        requestState
+        requestState,
+        placeHostShips
     };
 }

@@ -8,18 +8,7 @@ function CreateRoom() {
     const { createRoom, roomCode, connected, error: wsError } = useMultiplayerWS();
     const [created, setCreated] = useState(false);
     const [error, setError] = useState('');
-    const [ships, setShips] = useState([
-        { size: 4, x: 0, y: 0, horizontal: true },
-        { size: 3, x: 2, y: 2, horizontal: true },
-        { size: 3, x: 4, y: 4, horizontal: true },
-        { size: 2, x: 6, y: 6, horizontal: true },
-        { size: 2, x: 8, y: 8, horizontal: true },
-        { size: 2, x: 1, y: 1, horizontal: true },
-        { size: 1, x: 3, y: 3, horizontal: true },
-        { size: 1, x: 5, y: 5, horizontal: true },
-        { size: 1, x: 7, y: 7, horizontal: true },
-        { size: 1, x: 9, y: 9, horizontal: true },
-    ]);
+    // ships теперь берём только из localStorage, чтобы не было рассинхрона с FieldEdit
 
     // Обработка ошибок WebSocket
     useEffect(() => {
@@ -49,8 +38,8 @@ function CreateRoom() {
                 userId = Date.now() + Math.floor(Math.random()*1000);
                 localStorage.setItem('userId', userId);
             }
-            // Создаем комнату через WebSocket, передаём userId
-            createRoom({ ships, userId });
+            // Создаём комнату только с userId, без ships!
+            createRoom({ userId });
         } catch (e) {
             setError('Ошибка создания комнаты: ' + e.message);
         }
