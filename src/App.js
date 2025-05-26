@@ -521,14 +521,26 @@ function FieldEdit() {
     }
     // В рендере добавить экран ожидания для host
     const multiplayerRole = localStorage.getItem('multiplayer_role');
-    if (waitingJoin && multiplayerRole === 'host') {
-        return (
-            <div className="waiting-guest-screen">
-                <h2>Ожидание второго игрока...</h2>
-                <p>Передайте код комнаты другу и дождитесь его подключения.</p>
-            </div>
-        );
-    }
+    // Показываем сообщение ожидания внизу, не заменяя содержимое страницы
+    const waitingGuestMessage = (waitingJoin && multiplayerRole === 'host') ? (
+        <div style={{
+            position: 'absolute',
+            left: '50%',
+            bottom: '3vh',
+            transform: 'translateX(-50%)',
+            background: 'rgba(0,0,0,0.7)',
+            color: 'white',
+            padding: '2vh 4vh',
+            borderRadius: '2vh',
+            fontSize: '2.5vh',
+            zIndex: 10,
+            textAlign: 'center',
+            boxShadow: '0 2px 8px rgba(0,0,0,0.3)'
+        }}>
+            <div style={{fontWeight: 'bold', fontSize: '3vh'}}>Ожидание второго игрока...</div>
+            <div>Передайте код комнаты другу и дождитесь его подключения.</div>
+        </div>
+    ) : null;
     return (
         <header className="App-header" onMouseUp={(e) => MouseUp(e)} onMouseMove={(e) => MouseMove(e)}>
             <div className="bckgr"></div>
@@ -581,6 +593,7 @@ function FieldEdit() {
                 </button>
             </div>
             {error && <div style={{ color: 'red', position: 'absolute', left: '85vh', top: '80vh' }}>{error}</div>}
+            {waitingGuestMessage}
         </header>
     );
 }
