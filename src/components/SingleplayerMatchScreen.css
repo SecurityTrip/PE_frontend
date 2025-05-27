@@ -72,8 +72,6 @@
     background: rgba(30, 144, 255, 0.8);
     color: white;
     border: none;
-    padding: 1vh 2vh;
-    border-radius: 0.5vh;
     cursor: pointer;
     font-size: 2vh;
     transition: background-color 0.2s;

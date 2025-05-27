@@ -14,7 +14,7 @@ function Singleplayer() {
         if (selected === 1) diff = 'MEDIUM';
         if (selected === 2) diff = 'HARD';
         localStorage.setItem('singleplayer_difficulty', diff);
-        navigate('/fieldedit');
+        navigate('/fieldedit', { state: { mode: 'singleplayer' } });
     };
 
     return (

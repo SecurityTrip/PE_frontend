@@ -51,7 +51,7 @@ function CreateRoom() {
                 .then(() => {
                     localStorage.setItem('multiplayer_gameCode', roomCode.gameCode);
                     localStorage.setItem('multiplayer_role', 'host');
-                    navigate('/fieldedit'); // Consider navigating to a multiplayer field edit/wait screen
+                    navigate('/fieldedit', { state: { mode: 'multiplayer' } }); // Consider navigating to a multiplayer field edit/wait screen
                 })
                 .catch(err => {
                     setError('Ошибка копирования кода: ' + err.message);

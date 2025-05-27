@@ -100,8 +100,24 @@ function Regis() {
                 <input onChange={(e) => setPass(e.target.value)} value={pass} type="password" placeholder="Пароль" className="reginput" style={{ top: '11.5vh' }} />
                 <input onChange={(e) => setPassPass(e.target.value)} value={passpass} type="password" placeholder="Повторите пароль" className="reginput" style={{ top: '18vh' }} />
                 <button onClick={handleClick} className="regbutton">Зарегистрироваться</button>
-                {error && <div style={{ color: 'red', marginTop: '2vh' }}>{error}</div>}
-                {success && <div style={{ color: 'green', marginTop: '2vh' }}>{success}</div>}
+                {error && <div style={{
+                    color: 'red',
+                    backgroundColor: 'white',
+                    borderRadius: '2vh',
+                    marginTop: '-15vh',
+                    zIndex: '100',
+                    position: 'absolute',
+                    pointerEvents: 'none'
+                }}>{error}</div>}
+                {success && <div style={{
+                    color: 'green',
+                    backgroundColor: 'white',
+                    borderRadius: '2vh',
+                    marginTop: '-15vh',
+                    zIndex: '100',
+                    position: 'absolute',
+                    pointerEvents: 'none'
+                }}>{success}</div>}
                 <div style={{ position: 'absolute', color: 'white', left: 'calc(50% + 4vh)', fontSize: '4vh' }}>Выберите аватар:</div>
                 <SelectedAva x={selavx} y={selavy}></SelectedAva>
                 <Avatimbut y='7' x='-2' img={avaimg0} onClick={() => { avaSelect(0) }} />

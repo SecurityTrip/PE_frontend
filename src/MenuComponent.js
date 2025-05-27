@@ -40,8 +40,9 @@ function MenuComponent({ selctdMenu, children }) {
                 <label onClick={Ruls}>Правила игры</label ><br />
                 <label onClick={AbAuth}>Об авторах</label ><br />
                 <label onClick={Syst}>О системе</label ><br />
-                <label onClick={() => { localStorage.clear(); navigate('/'); }} style={{ color: 'red', cursor: 'pointer' }}>Выйти</label><br />
+                
             </div>
+            <label onClick={() => { localStorage.clear(); navigate('/'); }} className='exitButt' >Выйти</label><br />
             <SelectedMenu y={selctdMenu}></SelectedMenu>
             <div className="menuBigTab">{children}</div>
         </header>

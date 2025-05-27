@@ -385,17 +385,43 @@ button {
     top: 75vh;
     width: 50vh;
     height: 5vh;
-    font-size: 4vh;
     color: black;
     background-color: white
 }
 .partbutton {
     position: absolute;
-    top: 77vh;
-    left: calc(50% + 35vh);
-    width: 40vh;
+    top: 75vh;
+    left: 85vh;
+    width: 50vh;
     height: 5vh;
-    padding: 0 2vh;
-    transform: translate(-50%, -50%);
     font-size: 2vh;
+}
+    .partbutton:disabled {
+        background-color: gray;
+        cursor: not-allowed;
+    }
+.exitButt {
+    cursor: pointer;
+    color: red;
+    position: absolute;
+    top: 85vh;
+    left: calc(50% - 50vh);
+    transform: translate(-50%, -50%);
+    font-size: 4vh;
+    font-weight: bold;
+}
+.matchBigTab {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 175vh;
+    height: 80vh;
+    padding-top: 2vh;
+    transform: translate(-50%, -50%);
+    background-color: rgb(0,0,0,0.69);
+    border-radius: 4vh;
+    font-size: 4vh;
+    line-height: 7vh;
+    font-weight: bold;
+    box-shadow: 0px 10px 10px 0px rgb(0,0,0,0.3);
 }

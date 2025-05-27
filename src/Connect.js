@@ -44,7 +44,7 @@ function Connect() {
         localStorage.setItem('multiplayer_role', 'guest');
         
         // Переходим на страницу расстановки кораблей (или ожидания в случае гостя)
-        navigate('/fieldedit'); // Navigate to fieldedit where the joinRoom call for guest is handled
+        navigate('/fieldedit', { state: { mode: 'multiplayer' } }); // Navigate to fieldedit where the joinRoom call for guest is handled
     };
 
     return (

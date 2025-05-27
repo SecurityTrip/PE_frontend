@@ -1,4 +1,4 @@
-import React from 'react';
+﻿import React from 'react';
 import MenuComponent from './MenuComponent'; // assuming MenuComponent is now in its own file
 
 function Rules() {
@@ -6,7 +6,9 @@ function Rules() {
     return (
         <MenuComponent selctdMenu='4'>
             <div className='rulesScroll'>
-                fkj;ajksdj vkajsh dkjg;kajs;kvjh a;kjs hd;lkfgjha;kjvhwrijhgfkuah dfkj ha;ksd h;fa shd;vkhaoi w hgoihaoiv h[oaej v[oj a[osd jfo iasoif j[oais jdvoia j[soidjg[oia usoidjf[oiasj d[ofi[vo iasj[ofijgo[ ia sjd[ofij aosi djgvaslkdh f;as hd;lfkh ;lk;fa shd;k jfh;oais dovhas;jdh fkljh aslkjdhfklj hjhaskj dhkjhab sjkfh jkhasdjhf jahshdjkvhaklsdhflkjhasdk jfkasjlfkjashdkljfhaslkjd hfkjsad flsad fkaslkjf l;asjd;lkfaskf lask fljfakjshdkfjjalksjflkj aslkdlk alsk flasjdl kfjasljaslk jalsk lkas jlkajs lkjsl kafj alksdj
+                «Морской бой» – увлекательная развивающая игра, в которой участвуют два игрока. Цель – уничтожить корабли соперника быстрее, чем он потопит ваши.
+                По правилам боя каждый игрок владеет 10 кораблями. Из них: 1 – четырехпалубный, занимающий на поле четыре клетки; 2 – трехпалубных, каждый из них занимает три клетки; 3 – двухпалубных, состоящих из двух клеток и 4 – однопалубных из одной клетки. Игрок располагает корабли так, чтобы они не касались друг друга и между ними был зазор не менее одной клетки. Корабли не должны быть изогнутыми или располагаться по диагонали, они должны быть прямыми. Правилами разрешено кораблям занимать углы или касаться краев поля.
+                После расстановки участники приступают к игре. Игрок, получивший право первым начать игру, производит «выстрел», нажав на клетку на поле противника. Если эта клетка занята частью корабля или всем кораблем, то противник соответственно говорит «ранен» или «убит». Участник получает право еще на один ход. Если в названной им клетке нет корабля, ход переходит сопернику, а пустая клетка помечается крестиком. Игра ведется до тех пор, пока у одного из участников не будут потоплены все корабли.
             </div>
         </MenuComponent>
     );
