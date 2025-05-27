@@ -3,6 +3,23 @@ import { useNavigate } from 'react-router-dom';
 import { Client } from '@stomp/stompjs';
 import SockJS from 'sockjs-client';
 import './SingleplayerMatchScreen.css';
+import promah from '../ps/promah.png';
+import popal from '../ps/popal.png';
+import p1 from '../ps/p1.png';
+import p2 from '../ps/p2.png';
+import p3 from '../ps/p3.png';
+import p4 from '../ps/p4.png';
+import avaimg0 from '../avas/avaimg0.gif';
+import avaimg1 from '../avas/avaimg1.gif';
+import avaimg2 from '../avas/avaimg2.gif';
+import avaimg3 from '../avas/avaimg3.gif';
+import avaimg4 from '../avas/avaimg4.gif';
+import avaimg5 from '../avas/avaimg5.gif';
+import avaimg6 from '../avas/avaimg6.gif';
+import avaimg7 from '../avas/avaimg7.gif';
+import avaimg8 from '../avas/avaimg8.gif';
+import avaimg9 from '../avas/avaimg9.gif';
+import botava from '../avas/botava.jpg';
 
 // Вспомогательная функция для рендеринга доски
 export function renderBoard(board, isEnemy, onCellClick, ships) {
@@ -64,7 +81,7 @@ export function renderBoard(board, isEnemy, onCellClick, ships) {
     };
 
     return (
-        <div className="board-grid">
+        <>
             {board.map((row, y) => row.map((cell, x) => {
                 let cellClass = 'board-cell';
                 let content = null;
@@ -95,10 +112,10 @@ export function renderBoard(board, isEnemy, onCellClick, ships) {
                 // Обработка попаданий и промахов для обоих полей
                 if (cell === 2 || (isEnemy && isAdjacentToSunkShip(x, y, shipsToUse))) { // Промах или клетка рядом с потопленным кораблем
                     cellClass += ' miss';
-                    content = 'X';
+                    content = promah;
                 } else if (cell === 3) { // Попадание
                     cellClass += ' hit';
-                    content = '●';
+                    content = popal;
 
                     // Если это поле противника и клетка является частью потопленного корабля
                     if (isEnemy && shipsToUse) {
@@ -111,20 +128,37 @@ export function renderBoard(board, isEnemy, onCellClick, ships) {
                     }
                 }
 
-                return (
+                return (<>
                     <div
                         key={x+','+y}
                         onClick={isEnemy && onCellClick ? () => onCellClick(x,y) : undefined}
                         className={cellClass}
                         style={{
-                            cursor: isEnemy && onCellClick ? 'pointer' : 'default'
+                            cursor: isEnemy && onCellClick ? 'pointer' : 'default',
+                            position: 'absolute',
+                            left: (x * 7.7 + 3 + (isEnemy ? 93 : 0)) + 'vh',
+                            top: y * 7.7 + 3 + 'vh',
+                            width: '7vh',
+                            height: '7vh',
+                            backgroundColor: 'rgb(0,0,0,0.5)',
+                            borderRadius: '1vh'
                         }}
                     >
-                        {content}
+                        <img src={content} style={{ width: '6vh', zIndex: '1001' }} ></img>
                     </div>
+                    {content === popal && isEnemy && <div style={{
+                        position: 'absolute',
+                        left: (x * 7.7 + 97) + 'vh',
+                        top: y * 7.7 + 4 + 'vh',
+                        width: '5vh',
+                        height: '5vh',
+                        backgroundColor: 'rgb(255,212,0)',
+                        borderRadius: '10vh'
+                    }}></div>}
+                </>
                 );
             }))}
-        </div>
+        </>
     );
 }
 
@@ -264,56 +298,106 @@ const SingleplayerMatchScreen = () => {
             </header>
         );
     }
+    const avatars = [
+        avaimg0, avaimg1, avaimg2, avaimg3, avaimg4,
+        avaimg5, avaimg6, avaimg7, avaimg8, avaimg9
+    ];
 
+    // Получаем индекс из localStorage
+    const avatarId = parseInt(localStorage.getItem('avatarId'), 10);
+
+    // Безопасная подстановка изображения
+    const avatarSrc = avatars[avatarId]
     return (
-        <div className="field-edit-container">
-            <h2>Одиночная игра</h2>
+        /*<div className="field-edit-container">*/
+            
             <header className="App-header">
                 <div className="bckgr"></div>
                 <div style={{
-                    color: 'white',
-                    fontSize: '3vh',
-                    textAlign: 'center',
-                    marginBottom: '3vh'
-                }}>
-                    Одиночная игра
-                    <button onClick={handleExit} className="fieldButt" style={{ marginLeft: '2vh' }}>Выйти</button>
-                </div>
+                    position: 'absolute',
+                    top: '50%',
+                    left: '50%',
+                    width: '10vh',
+                    height: '90vh',
+                    transform: 'translate(-50%, -50%)',
+                    backgroundColor: 'white',
+                    borderRadius: '4vh',
+                    boxShadow: '0px 10px 10px 0px rgb(0,0,0,0.3)',
+                    zIndex: '100'
+                }}></div>
+
+            <img src={avatarSrc} alt='аватар' style={{
+                position: 'absolute',
+                top: '1.5vh',
+                left: 'calc(50% - 92vh)',
+                height: '7vh',
+                borderRadius: '2.5vh',
+                transform: 'translate(-50%, 0)'
+            }}></img>
+            <div style={{
+                position: 'absolute',
+                top: '1.5vh',
+                left: 'calc(50% - 85vh)',
+                textAlign: 'left',
+                color:'black'
+            }}> {localStorage.getItem('username')}</div>
+            <img src={botava} alt='аватар' style={{
+                position: 'absolute',
+                top: '1.5vh',
+                left: 'calc(50% + 92vh)',
+                height: '7vh',
+                borderRadius: '2.5vh',
+                transform: 'translate(-50%, 0)'
+            }}></img>
+            <div style={{
+                position: 'absolute',
+                display:'block',
+                top: '1.5vh',
+                left: '50%',
+                textAlign: 'right',
+                color: 'black',
+                width: '85vh'
+            }}>Бот</div>
+            <button onClick={handleExit} className="fieldButt" style={{
+                position: 'absolute',
+                top: '95vh',
+                left: 'calc(50% - 90vh)',
+                width: '10vh',
+                height: '5vh',
+                transform: 'translate(-50%, -50%)',
+            }}>Выйти</button>
+                
+            <div className="matchBigTab">
+
+
+
+                {game && game.playerBoard && renderBoard(game.playerBoard.board, false, null, game.playerBoard.ships)}
+                {game && game.computerBoard && renderBoard(game.computerBoard.board, true, handleCellClick, game.computerBoard.ships)}
+                <img draggable={false} alt='' src={p4} style={{ height: '5.3vh', position: 'absolute', transform: game.playerBoard.ships[9].horizontal ? 'rotate(0deg)' : 'rotate(90deg) translate(0, -100%)', transformOrigin: 'top left', left: 3.8 + game.playerBoard.ships[9].x * 7.7 + 'vh', top: 3.8 + game.playerBoard.ships[9].y * 7.7 + 'vh' }}></img>
+                <img draggable={false} alt='' src={p3} style={{ height: '5.3vh', position: 'absolute', transform: game.playerBoard.ships[8].horizontal ? 'rotate(0deg)' : 'rotate(90deg) translate(0, -100%)', transformOrigin: 'top left', left: 3.8 + game.playerBoard.ships[8].x * 7.7 + 'vh', top: 3.8 + game.playerBoard.ships[8].y * 7.7 + 'vh' }}></img>
+                <img draggable={false} alt='' src={p3} style={{ height: '5.3vh', position: 'absolute', transform: game.playerBoard.ships[7].horizontal ? 'rotate(0deg)' : 'rotate(90deg) translate(0, -100%)', transformOrigin: 'top left', left: 3.8 + game.playerBoard.ships[7].x * 7.7 + 'vh', top: 3.8 + game.playerBoard.ships[7].y * 7.7 + 'vh' }}></img>
+                <img draggable={false} alt='' src={p2} style={{ height: '5.3vh', position: 'absolute', transform: game.playerBoard.ships[6].horizontal ? 'rotate(0deg)' : 'rotate(90deg) translate(0, -100%)', transformOrigin: 'top left', left: 3.8 + game.playerBoard.ships[6].x * 7.7 + 'vh', top: 3.8 + game.playerBoard.ships[6].y * 7.7 + 'vh' }}></img>
+                <img draggable={false} alt='' src={p2} style={{ height: '5.3vh', position: 'absolute', transform: game.playerBoard.ships[5].horizontal ? 'rotate(0deg)' : 'rotate(90deg) translate(0, -100%)', transformOrigin: 'top left', left: 3.8 + game.playerBoard.ships[5].x * 7.7 + 'vh', top: 3.8 + game.playerBoard.ships[5].y * 7.7 + 'vh' }}></img>
+                <img draggable={false} alt='' src={p2} style={{ height: '5.3vh', position: 'absolute', transform: game.playerBoard.ships[4].horizontal ? 'rotate(0deg)' : 'rotate(90deg) translate(0, -100%)', transformOrigin: 'top left', left: 3.8 + game.playerBoard.ships[4].x * 7.7 + 'vh', top: 3.8 + game.playerBoard.ships[4].y * 7.7 + 'vh' }}></img>
+                <img draggable={false} alt='' src={p1} style={{ height: '5.3vh', position: 'absolute', transform: game.playerBoard.ships[3].horizontal ? 'rotate(0deg)' : 'rotate(90deg) translate(0, -100%)', transformOrigin: 'top left', left: 3.8 + game.playerBoard.ships[3].x * 7.7 + 'vh', top: 3.8 + game.playerBoard.ships[3].y * 7.7 + 'vh' }}></img>
+                <img draggable={false} alt='' src={p1} style={{ height: '5.3vh', position: 'absolute', transform: game.playerBoard.ships[2].horizontal ? 'rotate(0deg)' : 'rotate(90deg) translate(0, -100%)', transformOrigin: 'top left', left: 3.8 + game.playerBoard.ships[2].x * 7.7 + 'vh', top: 3.8 + game.playerBoard.ships[2].y * 7.7 + 'vh' }}></img>
+                <img draggable={false} alt='' src={p1} style={{ height: '5.3vh', position: 'absolute', transform: game.playerBoard.ships[1].horizontal ? 'rotate(0deg)' : 'rotate(90deg) translate(0, -100%)', transformOrigin: 'top left', left: 3.8 + game.playerBoard.ships[1].x * 7.7 + 'vh', top: 3.8 + game.playerBoard.ships[1].y * 7.7 + 'vh' }}></img>
+                <img draggable={false} alt='' src={p1} style={{ height: '5.3vh', position: 'absolute', transform: game.playerBoard.ships[0].horizontal ? 'rotate(0deg)' : 'rotate(90deg) translate(0, -100%)', transformOrigin: 'top left', left: 3.8 + game.playerBoard.ships[0].x * 7.7 + 'vh', top: 3.8 + game.playerBoard.ships[0].y * 7.7 + 'vh' }}></img>
 
                 <div style={{
-                    display: 'flex',
-                    justifyContent: 'center',
-                    alignItems: 'flex-start',
-                    gap: '5vh'
-                }}>
-                    <div className="match-board-container">
-                        <div style={{
-                            color: 'white',
-                            marginBottom: '1.5vh',
-                            fontSize: '2.5vh',
-                            textAlign: 'center'
-                        }}>Ваше поле</div>
-                        {game && game.playerBoard && renderBoard(game.playerBoard.board, false, null, game.playerBoard.ships)}
-                    </div>
-                     <div className="match-board-container">
-                        <div style={{
-                            color: 'white',
-                            marginBottom: '1.5vh',
-                            fontSize: '2.5vh',
-                            textAlign: 'center'
-                        }}>Поле ИИ</div>
-                        {game && game.computerBoard && renderBoard(game.computerBoard.board, true, handleCellClick, game.computerBoard.ships)}
-                    </div>
-                </div>
-
-                <div style={{
+                    position: 'absolute',
                     color: 'white',
                     fontSize: '2vh',
                     textAlign: 'center',
-                    marginTop: '3vh'
+                    marginTop: '3vh',
+                    zIndex: '1000'
                 }}>
-                    <div style={{ marginBottom: '1vh' }}>
-                        Статус: {game && game.gameState === 'IN_PROGRESS' ? 'Игра идет' : (game && game.gameState === 'PLAYER_WON' ? 'Вы выиграли!' : (game && game.gameState === 'COMPUTER_WON' ? 'ИИ выиграл' : 'Завершена'))}
+                    <div style={{
+                        //position: 'absolute',
+                        marginBottom: '1vh',
+                        //zIndex: '1000'
+                    }}>
+                        Статус: {game && game.gameState === 'IN_PROGRESS' ? 'Игра идет' : (game && game.gameState === 'PLAYER_WINS' ? 'Вы выиграли!' : (game && game.gameState === 'COMPUTER_WINS' ? 'ИИ выиграл' : 'Завершена'))}
                         {game && game.gameState === 'IN_PROGRESS' && (
                             <span style={{ marginLeft: '2vh' }}>
                                 Ход: {game.playerTurn ? 'Ваш' : 'ИИ'}
@@ -321,11 +405,13 @@ const SingleplayerMatchScreen = () => {
                         )}
                     </div>
 
-                     {moveResult && (
+                    {moveResult && (
                         <div style={{
+                            //position: 'absolute',
                             color: moveResult.hit ? '#4caf50' : '#ff9800',
                             marginTop: '1vh',
-                            fontSize: '2.2vh'
+                            fontSize: '2.2vh',
+                            //zIndex: '1000'
                         }}>
                             {moveResult.hit ? 'Попадание!' : 'Промах!'}
                             {moveResult.sunk && ' Корабль потоплен!'}
@@ -333,29 +419,116 @@ const SingleplayerMatchScreen = () => {
                         </div>
                     )}
 
-                     {moveError && (
+                    {moveError && (
                         <div style={{
+                            //position: 'absolute',
                             color: '#f44336',
                             marginTop: '1vh',
-                            fontSize: '2vh'
+                            fontSize: '2vh',
+                            //zIndex: '1000'
                         }}>
                             {moveError}
                         </div>
                     )}
 
-                     {error && gameId && (
+                    {error && gameId && (
                         <div style={{
+                            //position: 'absolute',
                             color: '#f44336',
                             marginTop: '1vh',
-                            fontSize: '2vh'
+                            fontSize: '2vh',
+                            //zIndex: '1000'
                         }}>
                             {error}
                         </div>
                     )}
                 </div>
 
+            </div>
+
+
+
+
+
+                {/*<div style={{*/}
+                {/*    display: 'flex',*/}
+                {/*    justifyContent: 'center',*/}
+                {/*    alignItems: 'flex-start',*/}
+                {/*    gap: '5vh'*/}
+                {/*}}>*/}
+                {/*    <div className="match-board-container">*/}
+                {/*        <div style={{*/}
+                {/*            color: 'white',*/}
+                {/*            marginBottom: '1.5vh',*/}
+                {/*            fontSize: '2.5vh',*/}
+                {/*            textAlign: 'center'*/}
+                {/*        }}>Ваше поле</div>*/}
+                {/*        {game && game.playerBoard && renderBoard(game.playerBoard.board, false, null, game.playerBoard.ships)}*/}
+                {/*    </div>*/}
+                {/*     <div className="match-board-container">*/}
+                {/*        <div style={{*/}
+                {/*            color: 'white',*/}
+                {/*            marginBottom: '1.5vh',*/}
+                {/*            fontSize: '2.5vh',*/}
+                {/*            textAlign: 'center'*/}
+                {/*        }}>Поле ИИ</div>*/}
+                {/*        {game && game.computerBoard && renderBoard(game.computerBoard.board, true, handleCellClick, game.computerBoard.ships)}*/}
+                {/*    </div>*/}
+                {/*</div>*/}
+
+                {/*<div style={{*/}
+                {/*    color: 'white',*/}
+                {/*    fontSize: '2vh',*/}
+                {/*    textAlign: 'center',*/}
+                {/*    marginTop: '3vh'*/}
+                {/*}}>*/}
+                {/*    <div style={{ marginBottom: '1vh' }}>*/}
+                {/*        Статус: {game && game.gameState === 'IN_PROGRESS' ? 'Игра идет' : (game && game.gameState === 'PLAYER_WON' ? 'Вы выиграли!' : (game && game.gameState === 'COMPUTER_WON' ? 'ИИ выиграл' : 'Завершена'))}*/}
+                {/*        {game && game.gameState === 'IN_PROGRESS' && (*/}
+                {/*            <span style={{ marginLeft: '2vh' }}>*/}
+                {/*                Ход: {game.playerTurn ? 'Ваш' : 'ИИ'}*/}
+                {/*            </span>*/}
+                {/*        )}*/}
+                {/*    </div>*/}
+
+                {/*     {moveResult && (*/}
+                {/*        <div style={{*/}
+                {/*            color: moveResult.hit ? '#4caf50' : '#ff9800',*/}
+                {/*            marginTop: '1vh',*/}
+                {/*            fontSize: '2.2vh'*/}
+                {/*        }}>*/}
+                {/*            {moveResult.hit ? 'Попадание!' : 'Промах!'}*/}
+                {/*            {moveResult.sunk && ' Корабль потоплен!'}*/}
+                {/*            {moveResult.gameOver && ' Игра окончена!'}*/}
+                {/*        </div>*/}
+                {/*    )}*/}
+
+                {/*     {moveError && (*/}
+                {/*        <div style={{*/}
+                {/*            color: '#f44336',*/}
+                {/*            marginTop: '1vh',*/}
+                {/*            fontSize: '2vh'*/}
+                {/*        }}>*/}
+                {/*            {moveError}*/}
+                {/*        </div>*/}
+                {/*    )}*/}
+
+                {/*     {error && gameId && (*/}
+                {/*        <div style={{*/}
+                {/*            color: '#f44336',*/}
+                {/*            marginTop: '1vh',*/}
+                {/*            fontSize: '2vh'*/}
+                {/*        }}>*/}
+                {/*            {error}*/}
+                {/*        </div>*/}
+                {/*    )}*/}
+            {/*</div>*/}
+
+
+
+
             </header>
-        </div>
+        /*</div>*/
     );
 };
 

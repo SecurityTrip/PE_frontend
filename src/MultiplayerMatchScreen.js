@@ -4,6 +4,20 @@ import { useMultiplayerWS } from './useMultiplayerWS';
 import './FieldEdit.css';
 import './components/SingleplayerMatchScreen.css';
 import { renderBoard as singleRenderBoard } from './components/SingleplayerMatchScreen';
+import p1 from './ps/p1.png';
+import p2 from './ps/p2.png';
+import p3 from './ps/p3.png';
+import p4 from './ps/p4.png';
+import avaimg0 from './avas/avaimg0.gif';
+import avaimg1 from './avas/avaimg1.gif';
+import avaimg2 from './avas/avaimg2.gif';
+import avaimg3 from './avas/avaimg3.gif';
+import avaimg4 from './avas/avaimg4.gif';
+import avaimg5 from './avas/avaimg5.gif';
+import avaimg6 from './avas/avaimg6.gif';
+import avaimg7 from './avas/avaimg7.gif';
+import avaimg8 from './avas/avaimg8.gif';
+import avaimg9 from './avas/avaimg9.gif';
 
 const MultiplayerMatchScreen = () => {
     const navigate = useNavigate();
@@ -81,7 +95,7 @@ const MultiplayerMatchScreen = () => {
     // Выход из игры (мультиплеер)
     function handleExit() {
         localStorage.removeItem('multiplayer_gameId');
-        navigate('/multiplayer'); // Навигация обратно на выбор комнаты
+        navigate('/singleplayer'); // Навигация обратно на выбор комнаты
     }
 
     // Обработка клика по клетке поля противника (используем wsGameState для актуальности)
@@ -107,7 +121,7 @@ const MultiplayerMatchScreen = () => {
         // Для мультиплеера ОБЯЗАТЕЛЬНО нужен userId в payload!
         let userId = Number(localStorage.getItem('userId'));
         if (!userId) {
-            userId = Date.now() + Math.floor(Math.random()*1000);
+            userId = Date.now() + Math.floor(Math.random() * 1000);
             localStorage.setItem('userId', userId);
         }
         sendMove({ gameCode: gameId, x, y, userId });
@@ -168,13 +182,13 @@ const MultiplayerMatchScreen = () => {
                 for (const pos of ship.positions) {
                     const shipX = pos[0];
                     const shipY = pos[1];
-                    
+
                     // Проверяем соседние клетки
                     for (let dx = -1; dx <= 1; dx++) {
                         for (let dy = -1; dy <= 1; dy++) {
                             const nx = shipX + dx;
                             const ny = shipY + dy;
-                            
+
                             // Если это текущая клетка и она помечена как промах
                             if (nx === x && ny === y && board[ny][nx] === 2) {
                                 return true;
@@ -205,146 +219,284 @@ const MultiplayerMatchScreen = () => {
                 <div className="bckgr"></div>
                 <div className="fieldEditBigTab" style={{ textAlign: 'center', paddingTop: '20vh' }}>
                     <div style={{ color: 'white', fontSize: '3vh', marginBottom: '2vh' }}>{error}</div>
-                    <button onClick={handleExit} className="fieldButt">Выйти</button>
+                    <button onClick={handleExit} className="fieldButt" style={{zIndex:'1101'} }>Выйти</button>
                 </div>
             </header>
         );
     }
 
+
+
+    const avatars = [
+        avaimg0, avaimg1, avaimg2, avaimg3, avaimg4,
+        avaimg5, avaimg6, avaimg7, avaimg8, avaimg9
+    ];
+
+    // Получаем индекс из localStorage
+    const avatarId = parseInt(localStorage.getItem('avatarId'), 10);
+
+    const avatarIdPro = parseInt( wsGameState.opponentAvatarId , 10);
+
+    // Безопасная подстановка изображения
+    const avatarSrc = avatars[avatarId];
+
+    const avatarSrcPro = avatars[avatarIdPro];
+
     return (
-        <div className="field-edit-container">
-            <h2>Многопользовательская игра</h2>
-            <header className="App-header">
-                <div className="bckgr"></div>
-                <div className="fieldEditBigTab" style={{
-                    display: 'flex',
-                    flexDirection: 'column',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    gap: '3vh'
+        <header className="App-header">
+            <div className="bckgr"></div>
+            {/*<div className="fieldEditBigTab" style={{*/}
+            {/*    display: 'flex',*/}
+            {/*    flexDirection: 'column',*/}
+            {/*    alignItems: 'center',*/}
+            {/*    justifyContent: 'center',*/}
+            {/*    gap: '3vh'*/}
+            {/*}}>*/}
+            <div style={{
+                position: 'absolute',
+                top: '50%',
+                left: '50%',
+                width: '10vh',
+                height: '90vh',
+                transform: 'translate(-50%, -50%)',
+                backgroundColor: 'white',
+                borderRadius: '4vh',
+                boxShadow: '0px 10px 10px 0px rgb(0,0,0,0.3)',
+                zIndex: '100'
+            }}></div>
+
+
+
+
+
+
+            <img src={avatarSrc} alt='аватар' style={{
+                position: 'absolute',
+                top: '1.5vh',
+                left: 'calc(50% - 92vh)',
+                height: '7vh',
+                borderRadius: '2.5vh',
+                transform: 'translate(-50%, 0)'
+            }}></img>
+            <div style={{
+                position: 'absolute',
+                top: '1.5vh',
+                left: 'calc(50% - 85vh)',
+                textAlign: 'left',
+                color: 'black'
+            }}> {localStorage.getItem('username') + (wsGameState.playerTurn?' (ходит)':'')}</div>
+            <img src={avatarSrcPro} alt='аватар' style={{
+                position: 'absolute',
+                top: '1.5vh',
+                left: 'calc(50% + 92vh)',
+                height: '7vh',
+                borderRadius: '2.5vh',
+                transform: 'translate(-50%, 0)'
+            }}></img>
+            <div style={{
+                position: 'absolute',
+                display: 'block',
+                top: '1.5vh',
+                left: '50%',
+                textAlign: 'right',
+                color: 'black',
+                width: '85vh'
+            }}>{(!wsGameState.playerTurn ? '(ходит) ' : '')+wsGameState.opponentUsername}</div>
+
+
+
+
+
+            <button onClick={handleExit} className="fieldButt" style={{
+                position: 'absolute',
+                top: '95vh',
+                left: 'calc(50% - 90vh)',
+                width: '10vh',
+                height: '5vh',
+                transform: 'translate(-50%, -50%)',
+            }}>Выйти</button>
+
+
+
+            <div className="matchBigTab">
+
+
+                {wsGameState && wsGameState.playerBoard && singleRenderBoard(
+                    wsGameState.playerBoard.board,
+                    false,
+                    undefined,
+                    wsGameState.playerBoard.ships // ships для своего поля
+                )}
+
+
+                {wsGameState && wsGameState.computerBoard && singleRenderBoard(
+                    wsGameState.computerBoard.board,
+                    true,
+                    wsGameState.playerTurn ? handleCellClick : undefined,
+                    wsGameState.computerBoard.ships // ships для противника (должен быть пустой массив)
+                )}
+                {/*{!wsGameState?.playerTurn && (*/}
+                {/*    <div style={{*/}
+                {/*        position: 'absolute',*/}
+                {/*        top: 0, left: 0, right: 0, bottom: 0,*/}
+                {/*        background: 'rgba(0,0,0,0.15)',*/}
+                {/*        borderRadius: '10px',*/}
+                {/*        zIndex: 2*/}
+                {/*    }} />*/}
+                {/*)}*/}
+
+                <img draggable={false} alt='' src={p4} style={{ height: '5.3vh', position: 'absolute', transform: game.playerBoard.ships[9].horizontal ? 'rotate(0deg)' : 'rotate(90deg) translate(0, -100%)', transformOrigin: 'top left', left: 3.8 + game.playerBoard.ships[9].x * 7.7 + 'vh', top: 3.8 + game.playerBoard.ships[9].y * 7.7 + 'vh' }}></img>
+                <img draggable={false} alt='' src={p3} style={{ height: '5.3vh', position: 'absolute', transform: game.playerBoard.ships[8].horizontal ? 'rotate(0deg)' : 'rotate(90deg) translate(0, -100%)', transformOrigin: 'top left', left: 3.8 + game.playerBoard.ships[8].x * 7.7 + 'vh', top: 3.8 + game.playerBoard.ships[8].y * 7.7 + 'vh' }}></img>
+                <img draggable={false} alt='' src={p3} style={{ height: '5.3vh', position: 'absolute', transform: game.playerBoard.ships[7].horizontal ? 'rotate(0deg)' : 'rotate(90deg) translate(0, -100%)', transformOrigin: 'top left', left: 3.8 + game.playerBoard.ships[7].x * 7.7 + 'vh', top: 3.8 + game.playerBoard.ships[7].y * 7.7 + 'vh' }}></img>
+                <img draggable={false} alt='' src={p2} style={{ height: '5.3vh', position: 'absolute', transform: game.playerBoard.ships[6].horizontal ? 'rotate(0deg)' : 'rotate(90deg) translate(0, -100%)', transformOrigin: 'top left', left: 3.8 + game.playerBoard.ships[6].x * 7.7 + 'vh', top: 3.8 + game.playerBoard.ships[6].y * 7.7 + 'vh' }}></img>
+                <img draggable={false} alt='' src={p2} style={{ height: '5.3vh', position: 'absolute', transform: game.playerBoard.ships[5].horizontal ? 'rotate(0deg)' : 'rotate(90deg) translate(0, -100%)', transformOrigin: 'top left', left: 3.8 + game.playerBoard.ships[5].x * 7.7 + 'vh', top: 3.8 + game.playerBoard.ships[5].y * 7.7 + 'vh' }}></img>
+                <img draggable={false} alt='' src={p2} style={{ height: '5.3vh', position: 'absolute', transform: game.playerBoard.ships[4].horizontal ? 'rotate(0deg)' : 'rotate(90deg) translate(0, -100%)', transformOrigin: 'top left', left: 3.8 + game.playerBoard.ships[4].x * 7.7 + 'vh', top: 3.8 + game.playerBoard.ships[4].y * 7.7 + 'vh' }}></img>
+                <img draggable={false} alt='' src={p1} style={{ height: '5.3vh', position: 'absolute', transform: game.playerBoard.ships[3].horizontal ? 'rotate(0deg)' : 'rotate(90deg) translate(0, -100%)', transformOrigin: 'top left', left: 3.8 + game.playerBoard.ships[3].x * 7.7 + 'vh', top: 3.8 + game.playerBoard.ships[3].y * 7.7 + 'vh' }}></img>
+                <img draggable={false} alt='' src={p1} style={{ height: '5.3vh', position: 'absolute', transform: game.playerBoard.ships[2].horizontal ? 'rotate(0deg)' : 'rotate(90deg) translate(0, -100%)', transformOrigin: 'top left', left: 3.8 + game.playerBoard.ships[2].x * 7.7 + 'vh', top: 3.8 + game.playerBoard.ships[2].y * 7.7 + 'vh' }}></img>
+                <img draggable={false} alt='' src={p1} style={{ height: '5.3vh', position: 'absolute', transform: game.playerBoard.ships[1].horizontal ? 'rotate(0deg)' : 'rotate(90deg) translate(0, -100%)', transformOrigin: 'top left', left: 3.8 + game.playerBoard.ships[1].x * 7.7 + 'vh', top: 3.8 + game.playerBoard.ships[1].y * 7.7 + 'vh' }}></img>
+                <img draggable={false} alt='' src={p1} style={{ height: '5.3vh', position: 'absolute', transform: game.playerBoard.ships[0].horizontal ? 'rotate(0deg)' : 'rotate(90deg) translate(0, -100%)', transformOrigin: 'top left', left: 3.8 + game.playerBoard.ships[0].x * 7.7 + 'vh', top: 3.8 + game.playerBoard.ships[0].y * 7.7 + 'vh' }}></img>
+
+
+                {/*<div style={{*/}
+                {/*    display: 'flex',*/}
+                {/*    justifyContent: 'center',*/}
+                {/*    alignItems: 'flex-start',*/}
+                {/*    gap: '5vh'*/}
+                {/*}}>*/}
+                {/*    <div>*/}
+                {/*        <div style={{*/}
+                {/*            color: 'white',*/}
+                {/*            marginBottom: '1.5vh',*/}
+                {/*            fontSize: '2.5vh',*/}
+                {/*            textAlign: 'center'*/}
+                {/*        }}>Ваше поле</div>*/}
+                {/*        {wsGameState && wsGameState.playerBoard && singleRenderBoard(*/}
+                {/*            wsGameState.playerBoard.board,*/}
+                {/*            false,*/}
+                {/*            undefined,*/}
+                {/*            wsGameState.playerBoard.ships // ships для своего поля*/}
+                {/*        )}*/}
+                {/*    </div>*/}
+                {/*    <div>*/}
+                {/*        <div style={{*/}
+                {/*            color: 'white',*/}
+                {/*            marginBottom: '1.5vh',*/}
+                {/*            fontSize: '2.5vh',*/}
+                {/*            textAlign: 'center'*/}
+                {/*        }}>*/}
+                {/*            Поле противника*/}
+                {/*            {wsGameState && (*/}
+                {/*                <span style={{*/}
+                {/*                    marginLeft: '1vh',*/}
+                {/*                    color: wsGameState.playerTurn ? '#4caf50' : '#ff9800',*/}
+                {/*                    fontWeight: 'bold',*/}
+                {/*                    fontSize: '2vh'*/}
+                {/*                }}>*/}
+                {/*                    {wsGameState.playerTurn ? 'Ваш ход!' : 'Ждите противника'}*/}
+                {/*                </span>*/}
+                {/*            )}*/}
+                {/*        </div>*/}
+                {/*        <div*/}
+                {/*            style={{*/}
+                {/*                border: wsGameState?.playerTurn ? '3px solid #4caf50' : '3px solid #ff9800',*/}
+                {/*                borderRadius: '10px',*/}
+                {/*                opacity: wsGameState?.playerTurn ? 1 : 0.6,*/}
+                {/*                pointerEvents: wsGameState?.playerTurn ? 'auto' : 'none',*/}
+                {/*                transition: 'border 0.2s, opacity 0.2s',*/}
+                {/*                position: 'relative'*/}
+                {/*            }}*/}
+                {/*        >*/}
+                {/*            {wsGameState && wsGameState.computerBoard && singleRenderBoard(*/}
+                {/*                wsGameState.computerBoard.board,*/}
+                {/*                true,*/}
+                {/*                wsGameState.playerTurn ? handleCellClick : undefined,*/}
+                {/*                wsGameState.computerBoard.ships // ships для противника (должен быть пустой массив)*/}
+                {/*            )}*/}
+                {/*            {!wsGameState?.playerTurn && (*/}
+                {/*                <div style={{*/}
+                {/*                    position: 'absolute',*/}
+                {/*                    top: 0, left: 0, right: 0, bottom: 0,*/}
+                {/*                    background: 'rgba(0,0,0,0.15)',*/}
+                {/*                    borderRadius: '10px',*/}
+                {/*                    zIndex: 2*/}
+                {/*                }} />*/}
+                {/*            )}*/}
+                {/*        </div>*/}
+                {/*    </div>*/}
+                {/*</div>*/}
+
+
+
+
+
+
+
+
+
+
+
+
+                <div style={{
+                    position: 'absolute',
+                    color: 'white',
+                    fontSize: '2vh',
+                    textAlign: 'center',
+                    marginTop: '2vh',
+                    zIndex: '1000'
                 }}>
-                    <div style={{ 
-                        color: 'white',
-                        fontSize: '3vh',
-                        textAlign: 'center'
-                    }}>
-                        Многопользовательская игра
-                        <button onClick={handleExit} className="fieldButt" style={{ marginLeft: '2vh' }}>Выйти</button>
-                    </div>
-                    <div style={{ 
-                        display: 'flex',
-                        justifyContent: 'center',
-                        alignItems: 'flex-start',
-                        gap: '5vh'
-                    }}>
-                        <div>
-                            <div style={{ 
-                                color: 'white', 
-                                marginBottom: '1.5vh',
-                                fontSize: '2.5vh',
-                                textAlign: 'center'
-                            }}>Ваше поле</div>
-                            {wsGameState && wsGameState.playerBoard && singleRenderBoard(
-                                wsGameState.playerBoard.board,
-                                false,
-                                undefined,
-                                wsGameState.playerBoard.ships // ships для своего поля
-                            )}
+                    {/*<div style={{*/}
+                    {/*    //position: 'absolute',*/}
+                    {/*    marginBottom: '1vh',*/}
+                    {/*    //zIndex: '1000'*/}
+                    {/*}}>*/}
+                    {/*    Статус: {wsGameState && wsGameState.gameState === 'IN_PROGRESS' ? 'Игра идет' : (wsGameState && wsGameState.gameState === 'PLAYER_WINS' ? 'Вы выиграли!' : (wsGameState && wsGameState.gameState === 'OPPONENT_WINS' ? 'Противник выиграл' : 'Завершена'))}*/}
+                    {/*    {wsGameState && wsGameState.gameState === 'IN_PROGRESS' && (*/}
+                    {/*        <span style={{ marginLeft: '2vh' }}>*/}
+                    {/*            Ход: {wsGameState.playerTurn ? 'Ваш' : 'Противника'}*/}
+                    {/*        </span>*/}
+                    {/*    )}*/}
+                    {/*</div>*/}
+                    {/*{moveResult && (*/}
+                    {/*    <div style={{*/}
+                    {/*        //position: 'absolute',*/}
+                    {/*        //zIndex: '1000',*/}
+                    {/*        color: moveResult.lastMoveHit ? '#4caf50' : '#ff9800',*/}
+                    {/*        marginTop: '1vh',*/}
+                    {/*        fontSize: '2.2vh'*/}
+                    {/*    }}>*/}
+                    {/*        {moveResult.lastMoveGameOver && wsGameState.playerTurn && ' Победа!'}*/}
+                    {/*        {moveResult.lastMoveGameOver && !wsGameState.playerTurn && ' Поражение!'}*/}
+                    {/*    </div>*/}
+                    {/*)}*/}
+                    {moveError && (
+                        <div style={{
+                            //position: 'absolute',
+                            //zIndex: '1000',
+                            color: '#f44336',
+                            marginTop: '1vh',
+                            fontSize: '2vh'
+                        }}>
+                            {moveError}
                         </div>
-                        <div>
-                            <div style={{ 
-                                color: 'white', 
-                                marginBottom: '1.5vh',
-                                fontSize: '2.5vh',
-                                textAlign: 'center'
-                            }}>
-                                Поле противника
-                                {wsGameState && (
-                                    <span style={{
-                                        marginLeft: '1vh',
-                                        color: wsGameState.playerTurn ? '#4caf50' : '#ff9800',
-                                        fontWeight: 'bold',
-                                        fontSize: '2vh'
-                                    }}>
-                                        {wsGameState.playerTurn ? 'Ваш ход!' : 'Ждите противника'}
-                                    </span>
-                                )}
-                            </div>
-                            <div
-                                style={{
-                                    border: wsGameState?.playerTurn ? '3px solid #4caf50' : '3px solid #ff9800',
-                                    borderRadius: '10px',
-                                    opacity: wsGameState?.playerTurn ? 1 : 0.6,
-                                    pointerEvents: wsGameState?.playerTurn ? 'auto' : 'none',
-                                    transition: 'border 0.2s, opacity 0.2s',
-                                    position: 'relative'
-                                }}
-                            >
-                                {wsGameState && wsGameState.computerBoard && singleRenderBoard(
-                                    wsGameState.computerBoard.board,
-                                    true,
-                                    wsGameState.playerTurn ? handleCellClick : undefined,
-                                    wsGameState.computerBoard.ships // ships для противника (должен быть пустой массив)
-                                )}
-                                {!wsGameState?.playerTurn && (
-                                    <div style={{
-                                        position: 'absolute',
-                                        top: 0, left: 0, right: 0, bottom: 0,
-                                        background: 'rgba(0,0,0,0.15)',
-                                        borderRadius: '10px',
-                                        zIndex: 2
-                                    }} />
-                                )}
-                            </div>
+                    )}
+                    {error && gameId && (
+                        <div style={{
+                            //position: 'absolute',
+                            //zIndex: '1000',
+                            color: '#f44336',
+                            marginTop: '1vh',
+                            fontSize: '2vh'
+                        }}>
+                            {error}
                         </div>
-                    </div>
-                    <div style={{ 
-                        color: 'white',
-                        fontSize: '2vh',
-                        textAlign: 'center',
-                        marginTop: '2vh'
-                    }}>
-                        <div style={{ marginBottom: '1vh' }}>
-                            Статус: {wsGameState && wsGameState.gameState === 'IN_PROGRESS' ? 'Игра идет' : (wsGameState && wsGameState.gameState === 'PLAYER_WINS' ? 'Вы выиграли!' : (wsGameState && wsGameState.gameState === 'OPPONENT_WINS' ? 'Противник выиграл' : 'Завершена'))}
-                            {wsGameState && wsGameState.gameState === 'IN_PROGRESS' && (
-                                <span style={{ marginLeft: '2vh' }}>
-                                    Ход: {wsGameState.playerTurn ? 'Ваш' : 'Противника'}
-                                </span>
-                            )}
-                        </div>
-                        {moveResult && (
-                            <div style={{ 
-                                color: moveResult.lastMoveHit ? '#4caf50' : '#ff9800', 
-                                marginTop: '1vh',
-                                fontSize: '2.2vh'
-                            }}>
-                                {moveResult.lastMoveHit ? 'Попадание!' : 'Промах!'}
-                                {moveResult.lastMoveSunk && ' Корабль потоплен!'}
-                                {moveResult.lastMoveGameOver && ' Игра окончена!'}
-                            </div>
-                        )}
-                        {moveError && (
-                            <div style={{ 
-                                color: '#f44336', 
-                                marginTop: '1vh',
-                                fontSize: '2vh'
-                            }}>
-                                {moveError}
-                            </div>
-                        )}
-                        {error && gameId && (
-                            <div style={{ 
-                                color: '#f44336', 
-                                marginTop: '1vh',
-                                fontSize: '2vh'
-                            }}>
-                                {error}
-                            </div>
-                        )}
-                    </div>
+                    )}
                 </div>
-            </header>
-        </div>
+            </div>
+            {moveResult && moveResult.lastMoveGameOver && <div style={{ position: 'absolute', zIndex: '1100', width: '100%', height: '100%', backgroundColor: 'rgb(0,0,0,0.5)' }}>
+                {wsGameState.playerTurn && 'Победа!'}{!wsGameState.playerTurn && 'Поражение!' }
+            </div>}
+            {/*</div>*/}
+        </header>
     );
 };
 

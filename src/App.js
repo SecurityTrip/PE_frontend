@@ -2,7 +2,7 @@
 import React, { useState, useMemo, useRef, useEffect } from 'react';
 import logolabelimg from './лого_надпись.png';
 import logoimgimg from './лого_корабль.png';
-import { BrowserRouter as Router, Route, Routes, useNavigate,Link } from 'react-router-dom';
+import { BrowserRouter as Router, Route, Routes, useNavigate,Link,useLocation } from 'react-router-dom';
 import { Client } from '@stomp/stompjs';
 import avaimg0 from './avas/avaimg0.gif';
 import avaimg1 from './avas/avaimg1.gif';
@@ -66,6 +66,7 @@ function FieldEdit() {
     const [autoError, setAutoError] = useState('');
     const [waitingJoin, setWaitingJoin] = useState(false);
     const [error, setError] = useState('');
+    const [buttonActive, setButtonActive] = useState(false);
     const grid = useMemo(() => {
         let trt = []
         let id = 0;
@@ -119,7 +120,6 @@ function FieldEdit() {
                 //}
                 
                 if (ships[movinShip].rot === 0) {
-                    console.log(qx);
                     ships[movinShip].rot = 1;
                     ships[movinShip].px = qx;
                     ships[movinShip].py = ships[movinShip].rqy + (ships[movinShip].rqx - qx);
@@ -196,16 +196,18 @@ function FieldEdit() {
             const redFlags = redFlagsRef.current;
             
             //console.log(redFlags);
+            let foractivebutt = 0;
+            let globalred = false;
             for (let y = 0; y < 10; y++)
                 for (let x = 0; x < 10; x++) {
                     let red = false;
                     if (field[y][x] !== -1) {
                         if (y + 1 < 10) {
                             if (x + 1 < 10) {
-                                if (field[y + 1][x + 1] !== field[y][x] && field[y + 1][x + 1] !==-1)
+                                if (field[y + 1][x + 1] !== field[y][x] && field[y + 1][x + 1] !== -1)
                                     red = true;
                             }
-                            if (x - 1 >-1) {
+                            if (x - 1 > -1) {
                                 if (field[y + 1][x - 1] !== field[y][x] && field[y + 1][x - 1] !== -1)
                                     red = true;
                             }
@@ -220,7 +222,7 @@ function FieldEdit() {
                             if (field[y][x - 1] !== field[y][x] && field[y][x - 1] !== -1)
                                 red = true;
                         }
-                        if (y - 1 >-1) {
+                        if (y - 1 > -1) {
                             if (x + 1 < 10) {
                                 if (field[y - 1][x + 1] !== field[y][x] && field[y - 1][x + 1] !== -1)
                                     red = true;
@@ -233,15 +235,21 @@ function FieldEdit() {
                                 red = true;
                         }
                     }
+                    else {
+                        foractivebutt++;
+                    }
                     
-                    if (field[y][x] === 10 || red)
-                        redFlags[y*10+x]={ x, y, a: 0.5 };
+                    if (field[y][x] === 10 || red) {
+                        redFlags[y * 10 + x] = { x, y, a: 0.5 };
+                        globalred = true;
+                    }
                     else
                         redFlags[y * 10 + x] = { x, y, a: 0 };
                 }
 
             setMos(null)
             setMS(-1);
+            setButtonActive(foractivebutt === 80 && !globalred);
         }
     }
     const lastFrameTime = useRef(0);
@@ -380,6 +388,8 @@ function FieldEdit() {
     function TapRotHandle(x,y) {
         //console.log(x, y);
     }
+    const location = useLocation();
+    const mode = location.state?.mode;
     async function handleClick() {
         setError('');
         const ships = shipsRef.current;
@@ -393,7 +403,7 @@ function FieldEdit() {
         const multiplayerRole = localStorage.getItem('multiplayer_role');
         console.log('[FieldEdit] handleClick', { multiplayerCode, multiplayerRole, shipsData });
         
-        if (multiplayerCode && multiplayerRole === 'guest') {
+        if (multiplayerCode && multiplayerRole === 'guest' && mode === 'multiplayer') {
             try {
                 let userId = Number(localStorage.getItem('userId'));
                 if (!userId) {
@@ -408,7 +418,7 @@ function FieldEdit() {
             }
             return;
         }
-        if (multiplayerCode && multiplayerRole === 'host') {
+        if (multiplayerCode && multiplayerRole === 'host' && mode === 'multiplayer') {
             try {
                 let userId = Number(localStorage.getItem('userId'));
                 if (!userId) {
@@ -504,14 +514,15 @@ function FieldEdit() {
                 // data - массив кораблей [{size, x, y, horizontal}]
                 if (Array.isArray(data)) {
                     for (let i = 0; i < ships.length; i++) {
-                        if (data[i]) {
-                            ships[i].rqx = ships[i].tx = ships[i].px = data[i].x;
-                            ships[i].rqy = ships[i].ty = ships[i].py = data[i].y;
-                            ships[i].len = data[i].size;
-                            ships[i].rot = data[i].horizontal ? 0 : 1;
+                        if (data[9 - i]) {
+                            ships[i].rqx = ships[i].tx = ships[i].px = data[9 - i].x;
+                            ships[i].rqy = ships[i].ty = ships[i].py = data[9 - i].y;
+                            ships[i].len = data[9 - i].size;
+                            ships[i].rot = data[9 - i].horizontal ? 0 : 1;
                         }
                     }
                 }
+                setButtonActive(true);
             } else {
                 setAutoError('Ошибка генерации: ' + response.status);
             }
@@ -563,6 +574,7 @@ function FieldEdit() {
                 <button className='fieldButt' style={{ top: '54vh' }} onClick={() => handleAutoPlace('RANDOM')}>Случайно</button>
                 <button className='fieldButt' style={{ top: '61vh' }} onClick={() => handleAutoPlace('SHORE')}>Береговой метод</button>
                 <button className='fieldButt' style={{ top: '68vh' }} onClick={() => handleAutoPlace('ASYMMETRIC')}>Ассиметричный метод</button>
+                <button onClick={handleClick} className="partbutton" disabled={!buttonActive}>Играть</button>
                 <img draggable={false} alt='' onMouseDown={(e) => MouseDown(e, 9)} src={p4} style={{ height: '5.3vh', position: 'absolute', transform: ships[9].rot ? 'rotate(90deg) translate(0, -100%)' : 'rotate(0deg)', transformOrigin: 'top left', left: 3.8 + ships[9].tx * 7.7 + 'vh', top: 3.8 + ships[9].ty * 7.7 + 'vh' }}></img>
                 <img draggable={false} alt='' onMouseDown={(e) => MouseDown(e, 8)} src={p3} style={{ height: '5.3vh', position: 'absolute', transform: ships[8].rot ? 'rotate(90deg) translate(0, -100%)' : 'rotate(0deg)', transformOrigin: 'top left', left: 3.8 + ships[8].tx * 7.7 + 'vh', top: 3.8 + ships[8].ty * 7.7 + 'vh' }}></img>
                 <img draggable={false} alt='' onMouseDown={(e) => MouseDown(e, 7)} src={p3} style={{ height: '5.3vh', position: 'absolute', transform: ships[7].rot ? 'rotate(90deg) translate(0, -100%)' : 'rotate(0deg)', transformOrigin: 'top left', left: 3.8 + ships[7].tx * 7.7 + 'vh', top: 3.8 + ships[7].ty * 7.7 + 'vh' }}></img>
@@ -589,8 +601,7 @@ function FieldEdit() {
                         }} ></div>
                 )
                 }
-                <button onClick={handleClick} className="partbutton">Играть
-                </button>
+                
             </div>
             {error && <div style={{ color: 'red', position: 'absolute', left: '85vh', top: '80vh' }}>{error}</div>}
             {waitingGuestMessage}

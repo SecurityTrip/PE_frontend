@@ -48,10 +48,10 @@ function Auth() {
             <img className="logo" src={logolabelimg} alt="Logo" />
             <div className="logintab">Авторизация</div>
             <div className="logintabdark">
-                <input onChange={(e) => setLogin(e.target.value)} value={login} type="text" placeholder="Логин" className="loginput" style={{ top: '11.5vh' }} />
-                <input onChange={(e) => setPass(e.target.value)} value={pass} type="password" placeholder="Пароль" className="loginput" />
+                <input onChange={(e) => setLogin(e.target.value)} value={login} type="text" placeholder="Логин" className="loginput"  />
+                <input onChange={(e) => setPass(e.target.value)} value={pass} type="password" placeholder="Пароль" className="loginput" style={{ top: '11.5vh' }} />
                 <button onClick={handleClick} className="logbutton">Войти</button>
-                {error && <div style={{ color: 'red', marginTop: '2vh' }}>{error}</div>}
+                {error && <div style={{ color: 'red', marginTop: '-15vh', zIndex: '100', position: 'absolute', pointerEvents: 'none' }}>{error}</div>}
             </div>
             <Link to="/regis" className="linkToReg">Зарегистрироваться</Link>
         </header>
