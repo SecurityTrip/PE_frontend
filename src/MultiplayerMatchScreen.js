@@ -24,7 +24,7 @@ import MusicPlayer from './MusicPlayer';
 import SoundEffectPlayer from "./SoundEffectPlayer";
 import hitSound from './sound/hit.mp3';
 import missSound from './sound/miss.mp3';
-
+import ToggleSwitch from './ToggleSwitch';
 const MultiplayerMatchScreen = () => {
 
 
@@ -582,17 +582,27 @@ const MultiplayerMatchScreen = () => {
             {settings && <div style={{ position: 'absolute', zIndex: '1100', width: '100%', height: '100%', backgroundColor: 'rgb(0,0,0,0.5)' }}>
                 <div style={{ position: 'absolute', zIndex: '1100', width: '30vh', height: '20vh', top: '40vh', left: 'calc(50% - 15vh)', backgroundColor: 'rgb(0,0,0,0.7)', fontSize: '4vh' }}>
                     <button onClick={() => setSettings(false)} style={{ position: 'absolute', right: '1vh', top: '1vh', backgroundColor: 'red', width: '4vh', height: '3vh', fontSize: '2vh' }}>x</button>
-                    <input
-                        type="checkbox"
+                    {/*<input*/}
+                    {/*    type="checkbox"*/}
+                    {/*    checked={flagA}*/}
+                    {/*    onChange={handleCheckboxA}*/}
+                    {/*    style={{ position: 'absolute', width: '3vh', height: '3vh', right: '2vh', top: '6vh' }}*/}
+                    {/*/>*/}
+                    {/*<input*/}
+                    {/*    type="checkbox"*/}
+                    {/*    checked={flagB}*/}
+                    {/*    onChange={handleCheckboxB}*/}
+                    {/*    style={{ position: 'absolute', width: '3vh', height: '3vh', right: '2vh', top: '12vh' }}*/}
+                    {/*/>*/}
+                    <ToggleSwitch
                         checked={flagA}
                         onChange={handleCheckboxA}
-                        style={{ position: 'absolute', width: '3vh', height: '3vh', right: '2vh', top: '6vh' }}
+                        style={{ right: '2vh', top: '6vh' }}
                     />
-                    <input
-                        type="checkbox"
+                    <ToggleSwitch
                         checked={flagB}
                         onChange={handleCheckboxB}
-                        style={{ position: 'absolute', width: '3vh', height: '3vh', right: '2vh', top: '12vh' }}
+                        style={{ right: '2vh', top: '12vh' }}
                     />
                     <br />Музыка
                     <br />Звук
