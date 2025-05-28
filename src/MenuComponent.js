@@ -25,7 +25,8 @@ function MenuComponent({ selctdMenu, children }) {
         navigate('/about'); // Навигация на другую страницу
     }
     function Syst() {
-        navigate('/system'); // Навигация на другую страницу
+        //navigate('/system'); 
+        window.open('/system', '_blank');
     }
     return (
         <header className="App-header">
@@ -39,8 +40,7 @@ function MenuComponent({ selctdMenu, children }) {
                 <label onClick={ProfSt}>Настроить профиль</label><br />
                 <label onClick={Ruls}>Правила игры</label ><br />
                 <label onClick={AbAuth}>Об авторах</label ><br />
-                <label onClick={Syst}>О системе</label ><br />
-                
+                <label onClick={Syst} style={{position:'relative',color:'black',top:'4vh'} }>О системе</label ><br />
             </div>
             <label onClick={() => { localStorage.clear(); navigate('/'); }} className='exitButt' >Выйти</label><br />
             <SelectedMenu y={selctdMenu}></SelectedMenu>

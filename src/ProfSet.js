@@ -93,7 +93,7 @@ function ProfSet() {
             <Avatimbut y='17' x='28' img={avaimg8} onClick={() => { selectAva(8) }} />
             <Avatimbut y='17' x='38' img={avaimg9} onClick={() => { selectAva(9) }} />
             <input style={{top: '33vh'}} type="text" placeholder="Новый логин" className="profSetInputs" value={login} onChange={e=>setLogin(e.target.value)} />
-            <input style={{ top: '40vh' }} type="password" placeholder="Старый пароль (не требуется)" className="profSetInputs" value={oldPass} onChange={e=>setOldPass(e.target.value)} />
+            <input style={{ top: '40vh' }} type="password" placeholder="Старый пароль" className="profSetInputs" value={oldPass} onChange={e=>setOldPass(e.target.value)} />
             <input style={{ top: '47vh' }} type="password" placeholder="Новый пароль" className="profSetInputs" value={newPass} onChange={e=>setNewPass(e.target.value)} />
             <input style={{ top: '54vh' }} type="password" placeholder="Повторите пароль" className="profSetInputs" value={repeatPass} onChange={e=>setRepeatPass(e.target.value)} />
             <button onClick={saveClick} className="savebutt">Сохранить изменения</button>

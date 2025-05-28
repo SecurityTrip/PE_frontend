@@ -225,12 +225,12 @@ button {
 
 .menuTab {
     position: absolute;
-    top: 54vh;
+    top: 27vh;
     left: calc(50% - 50vh);
     width: 45vh;
-    height: 52vh;
+    height: 45vh;
     padding-top: 2vh;
-    transform: translate(-50%, -50%);
+    transform: translate(-50%, 0);
     background-color: rgb(0,0,0,0.69);
     border-radius: 5vh;
     font-size: 4vh;
