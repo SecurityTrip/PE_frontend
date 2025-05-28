@@ -451,11 +451,11 @@ const SingleplayerMatchScreen = () => {
 
 
 
-            {moveResult && moveResult.gameOver && <div style={{ position: 'absolute', zIndex: '1100', width: '100%', height: '100%', backgroundColor: 'rgb(0,0,0,0.5)' }}>
+            {game && game.gameState !== 'IN_PROGRESS' && <div style={{ position: 'absolute', zIndex: '1100', width: '100%', height: '100%', backgroundColor: 'rgb(0,0,0,0.5)' }}>
                 {game && game.gameState === 'PLAYER_WON' && <div>
                     <img src={winimg} alt='победа' style={{ height: '30vh', marginTop: '30vh' } }></img><br/>
                     Победа!
-                </div>}{game && game.gameState === 'COMPUTER_WON' && <div>
+                </div>}{game && game.gameState !== 'PLAYER_WON' && <div>
                     <img src={loseimg} alt='поражение' style={{ height: '30vh', marginTop: '30vh' }}></img><br />
                     Поражение! В следующий раз повезет!
                 </div>}
