@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Client } from '@stomp/stompjs';
 import SockJS from 'sockjs-client';
@@ -22,9 +22,15 @@ import avaimg9 from '../avas/avaimg9.gif';
 import botava from '../avas/botava.jpg';
 import winimg from '../ps/win.png';
 import loseimg from '../ps/lose.png';
+import MusicPlayer from '../MusicPlayer';
+import SoundEffectPlayer from "../SoundEffectPlayer";
+import hitSound from '../sound/hit.mp3';
+import missSound from '../sound/miss.mp3';
 
 // Вспомогательная функция для рендеринга доски
-export function renderBoard(board, isEnemy, onCellClick, ships) {
+export function renderBoard(board, isEnemy, onCellClick, ships, missSoundRef,hitSoundRef) {
+    
+
     if (!board) return null;
 
     console.log('[renderBoard] Данные для рендеринга:', {
@@ -104,7 +110,7 @@ export function renderBoard(board, isEnemy, onCellClick, ships) {
                                 }
                             }
                             if (hitIndex !== -1 && ship.hits && ship.hits[hitIndex]) {
-                                content = '●';
+                                content = popal;
                             }
                             break;
                         }
@@ -117,6 +123,7 @@ export function renderBoard(board, isEnemy, onCellClick, ships) {
                     content = promah;
                 } else if (cell === 3) { // Попадание
                     cellClass += ' hit';
+                    
                     content = popal;
 
                     // Если это поле противника и клетка является частью потопленного корабля
@@ -165,14 +172,53 @@ export function renderBoard(board, isEnemy, onCellClick, ships) {
 }
 
 const SingleplayerMatchScreen = () => {
+
+
+    const audioRef = useRef(null);
+
+    const handlePlay = () => {
+        audioRef.current?.play();
+    };
+
+    const handlePause = () => {
+        audioRef.current?.pause();
+    };
+
+    const hitSoundRef = useRef();
+    const missSoundRef = useRef();
+
+    const [settings, setSettings] = useState(false);
     const navigate = useNavigate();
     const stompClient = useRef(null);
-    const [gameId, setGameId] = React.useState(localStorage.getItem('singleplayer_gameId'));
-    const [game, setGame] = React.useState(null);
-    const [loading, setLoading] = React.useState(true);
-    const [error, setError] = React.useState('');
-    const [moveResult, setMoveResult] = React.useState(null);
-    const [moveError, setMoveError] = React.useState('');
+    const [gameId, setGameId] = useState(localStorage.getItem('singleplayer_gameId'));
+    const [game, setGame] = useState(null);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState('');
+    const [moveResult, setMoveResult] = useState(null);
+    const [moveError, setMoveError] = useState('');
+
+
+    const [flagA, setFlagA] = useState(true);
+    const [flagB, setFlagB] = useState(true);
+    const flagBRef = useRef(flagB);
+
+    // Синхронизируй ref с флагом каждый раз при изменении
+    useEffect(() => {
+        flagBRef.current = flagB;
+    }, [flagB]);
+
+    const handleCheckboxA = (e) => {
+        setFlagA(e.target.checked);
+        if (e.target.checked)
+            handlePlay();
+        else
+            handlePause();
+    };
+
+    const handleCheckboxB = (e) => {
+        setFlagB(e.target.checked);
+    };
+
 
     useEffect(() => {
         if (!gameId) {
@@ -202,6 +248,15 @@ const SingleplayerMatchScreen = () => {
                     const moveResponse = JSON.parse(message.body);
                     console.log('Move response:', moveResponse);
                     setMoveResult(moveResponse);
+                    console.log(flagB);
+                    if (moveResponse && flagBRef.current) {
+                        if (moveResponse.hit)
+                            hitSoundRef.current?.play();
+                        else
+                            missSoundRef.current?.play();
+                    } 
+
+
                 });
 
                 // Запрашиваем начальное состояние игры
@@ -230,6 +285,12 @@ const SingleplayerMatchScreen = () => {
     }, [gameId, navigate]);
 
     const handleCellClick = (x, y) => {
+        console.log(flagA,flagB);
+        if (flagA) {
+            handlePlay();
+        }
+            
+
         if (!stompClient.current || !stompClient.current.connected) {
             setError('Нет соединения с сервером');
             return;
@@ -270,6 +331,8 @@ const SingleplayerMatchScreen = () => {
             destination: "/app/singleplayer.state",
             body: gameId
         });
+
+
     };
 
     // Выход из игры (одиночная)
@@ -310,11 +373,20 @@ const SingleplayerMatchScreen = () => {
 
     // Безопасная подстановка изображения
     const avatarSrc = avatars[avatarId]
+
+
+
+    
+   
+
     return (
         /*<div className="field-edit-container">*/
             
             <header className="App-header">
-                <div className="bckgr"></div>
+            <div className="bckgr"></div>
+            <MusicPlayer audioRef={audioRef} />
+            <SoundEffectPlayer ref={hitSoundRef} src={hitSound} />
+            <SoundEffectPlayer ref={missSoundRef} src={missSound} />
                 <div style={{
                     position: 'absolute',
                     top: '50%',
@@ -367,15 +439,31 @@ const SingleplayerMatchScreen = () => {
                 width: '10vh',
                 height: '5vh',
                 transform: 'translate(-50%, -50%)',
-                zIndex: '1101'
+                zIndex: '1101',
+                backgroundColor:'red'
             }}>Выйти</button>
+            <button
+                onClick={() => setSettings(prev => !prev)}  // переключает переменную
+                className="fieldButt"
+                style={{
+                    position: 'absolute',
+                    top: '95vh',
+                    left: 'calc(50% + 90vh)',  // смещение вправо
+                    width: '15vh',
+                    height: '5vh',
+                    transform: 'translate(-50%, -50%)',
+                    zIndex: '1101'
+                }}
+            >
+                Настройки
+            </button>
                 
             <div className="matchBigTab">
 
 
 
-                {game && game.playerBoard && renderBoard(game.playerBoard.board, false, null, game.playerBoard.ships)}
-                {game && game.computerBoard && renderBoard(game.computerBoard.board, true, handleCellClick, game.computerBoard.ships)}
+                {game && game.playerBoard && renderBoard(game.playerBoard.board, false, null, game.playerBoard.ships,missSoundRef,hitSoundRef)}
+                {game && game.computerBoard && renderBoard(game.computerBoard.board, true, handleCellClick, game.computerBoard.ships, missSoundRef, hitSoundRef)}
                 <img draggable={false} alt='' src={p4} style={{ height: '5.3vh', position: 'absolute', transform: game.playerBoard.ships[9].horizontal ? 'rotate(0deg)' : 'rotate(90deg) translate(0, -100%)', transformOrigin: 'top left', left: 3.8 + game.playerBoard.ships[9].x * 7.7 + 'vh', top: 3.8 + game.playerBoard.ships[9].y * 7.7 + 'vh' }}></img>
                 <img draggable={false} alt='' src={p3} style={{ height: '5.3vh', position: 'absolute', transform: game.playerBoard.ships[8].horizontal ? 'rotate(0deg)' : 'rotate(90deg) translate(0, -100%)', transformOrigin: 'top left', left: 3.8 + game.playerBoard.ships[8].x * 7.7 + 'vh', top: 3.8 + game.playerBoard.ships[8].y * 7.7 + 'vh' }}></img>
                 <img draggable={false} alt='' src={p3} style={{ height: '5.3vh', position: 'absolute', transform: game.playerBoard.ships[7].horizontal ? 'rotate(0deg)' : 'rotate(90deg) translate(0, -100%)', transformOrigin: 'top left', left: 3.8 + game.playerBoard.ships[7].x * 7.7 + 'vh', top: 3.8 + game.playerBoard.ships[7].y * 7.7 + 'vh' }}></img>
@@ -395,32 +483,32 @@ const SingleplayerMatchScreen = () => {
                     marginTop: '3vh',
                     zIndex: '1000'
                 }}>
-                    <div style={{
-                        //position: 'absolute',
-                        marginBottom: '1vh',
-                        //zIndex: '1000'
-                    }}>
-                        Статус: {game && game.gameState === 'IN_PROGRESS' ? 'Игра идет' : (game && game.gameState === 'PLAYER_WINS' ? 'Вы выиграли!' : (game && game.gameState === 'COMPUTER_WINS' ? 'ИИ выиграл' : 'Завершена'))}
-                        {game && game.gameState === 'IN_PROGRESS' && (
-                            <span style={{ marginLeft: '2vh' }}>
-                                Ход: {game.playerTurn ? 'Ваш' : 'ИИ'}
-                            </span>
-                        )}
-                    </div>
+                    {/*<div style={{*/}
+                    {/*    //position: 'absolute',*/}
+                    {/*    marginBottom: '1vh',*/}
+                    {/*    //zIndex: '1000'*/}
+                    {/*}}>*/}
+                    {/*    Статус: {game && game.gameState === 'IN_PROGRESS' ? 'Игра идет' : (game && game.gameState === 'PLAYER_WINS' ? 'Вы выиграли!' : (game && game.gameState === 'COMPUTER_WINS' ? 'ИИ выиграл' : 'Завершена'))}*/}
+                    {/*    {game && game.gameState === 'IN_PROGRESS' && (*/}
+                    {/*        <span style={{ marginLeft: '2vh' }}>*/}
+                    {/*            Ход: {game.playerTurn ? 'Ваш' : 'ИИ'}*/}
+                    {/*        </span>*/}
+                    {/*    )}*/}
+                    {/*</div>*/}
 
-                    {moveResult && (
-                        <div style={{
-                            //position: 'absolute',
-                            color: moveResult.hit ? '#4caf50' : '#ff9800',
-                            marginTop: '1vh',
-                            fontSize: '2.2vh',
-                            //zIndex: '1000'
-                        }}>
-                            {moveResult.hit ? 'Попадание!' : 'Промах!'}
-                            {moveResult.sunk && ' Корабль потоплен!'}
-                            {moveResult.gameOver && ' Игра окончена!'}
-                        </div>
-                    )}
+                    {/*{moveResult && (*/}
+                    {/*    <div style={{*/}
+                    {/*        //position: 'absolute',*/}
+                    {/*        color: moveResult.hit ? '#4caf50' : '#ff9800',*/}
+                    {/*        marginTop: '1vh',*/}
+                    {/*        fontSize: '2.2vh',*/}
+                    {/*        //zIndex: '1000'*/}
+                    {/*    }}>*/}
+                    {/*        {moveResult.hit ? 'Попадание!' : 'Промах!'}*/}
+                    {/*        {moveResult.sunk && ' Корабль потоплен!'}*/}
+                    {/*        {moveResult.gameOver && ' Игра окончена!'}*/}
+                    {/*    </div>*/}
+                    {/*)}*/}
 
                     {moveError && (
                         <div style={{
@@ -461,6 +549,28 @@ const SingleplayerMatchScreen = () => {
                 </div>}
             </div>}
 
+
+
+            {settings && <div style={{ position: 'absolute', zIndex: '1100', width: '100%', height: '100%', backgroundColor: 'rgb(0,0,0,0.5)' }}>
+                <div style={{ position: 'absolute', zIndex: '1100', width: '30vh', height: '20vh', top: '40vh', left: 'calc(50% - 15vh)', backgroundColor: 'rgb(0,0,0,0.7)' , fontSize:'4vh'}}>
+                    <button onClick={() => setSettings(false)} style={{position:'absolute',right:'1vh',top:'1vh', backgroundColor: 'red',width:'4vh',height:'3vh',fontSize:'2vh' }}>x</button>
+                    <input
+                        type="checkbox"
+                        checked={flagA}
+                        onChange={handleCheckboxA}
+                        style={{position:'absolute',width:'3vh',height:'3vh',right:'2vh',top:'6vh'} }
+                    />
+                    <input
+                        type="checkbox"
+                        checked={flagB}
+                        onChange={handleCheckboxB}
+                        style={{ position: 'absolute', width: '3vh', height: '3vh', right: '2vh', top: '12vh' }}
+                    />
+                    <br />Музыка
+                    <br />Звук
+                </div>
+                
+            </div>}
 
 
 

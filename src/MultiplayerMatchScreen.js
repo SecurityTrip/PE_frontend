@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useMultiplayerWS } from './useMultiplayerWS';
 import './FieldEdit.css';
@@ -20,8 +20,32 @@ import avaimg8 from './avas/avaimg8.gif';
 import avaimg9 from './avas/avaimg9.gif';
 import winimg from './ps/win.png';
 import loseimg from './ps/lose.png';
+import MusicPlayer from './MusicPlayer';
+import SoundEffectPlayer from "./SoundEffectPlayer";
+import hitSound from './sound/hit.mp3';
+import missSound from './sound/miss.mp3';
 
 const MultiplayerMatchScreen = () => {
+
+
+    const audioRef = useRef(null);
+
+    const handlePlay = () => {
+        audioRef.current?.play();
+    };
+
+    const handlePause = () => {
+        audioRef.current?.pause();
+    };
+
+    const hitSoundRef = useRef();
+    const missSoundRef = useRef();
+
+    const [settings, setSettings] = useState(false);
+
+
+
+
     const navigate = useNavigate();
     const [game, setGame] = useState(null);
     const [loading, setLoading] = useState(true);
@@ -29,7 +53,26 @@ const MultiplayerMatchScreen = () => {
     const [moveError, setMoveError] = useState('');
     const [moveResult, setMoveResult] = useState(null);
     const gameId = localStorage.getItem('multiplayer_gameId');
+    const [flagA, setFlagA] = useState(true);
+    const [flagB, setFlagB] = useState(true);
+    const flagBRef = useRef(flagB);
 
+    // Синхронизируй ref с флагом каждый раз при изменении
+    useEffect(() => {
+        flagBRef.current = flagB;
+    }, [flagB]);
+
+    const handleCheckboxA = (e) => {
+        setFlagA(e.target.checked);
+        if (e.target.checked)
+            handlePlay();
+        else
+            handlePause();
+    };
+
+    const handleCheckboxB = (e) => {
+        setFlagB(e.target.checked);
+    };
     const {
         connected,
         moveInfo,
@@ -64,6 +107,12 @@ const MultiplayerMatchScreen = () => {
     useEffect(() => {
         if (moveInfo) {
             setMoveResult(moveInfo);
+            if (moveInfo && flagBRef.current) {
+                if (moveInfo.lastMoveHit)
+                    hitSoundRef.current?.play();
+                else
+                    missSoundRef.current?.play();
+            } 
             // Не делаем requestState(gameId) — wsGameState должен обновиться через WebSocket
         }
     }, [moveInfo]);
@@ -102,6 +151,9 @@ const MultiplayerMatchScreen = () => {
 
     // Обработка клика по клетке поля противника (используем wsGameState для актуальности)
     function handleCellClick(x, y) {
+        if (flagA) {
+            handlePlay();
+        }
         setMoveError('');
         setMoveResult(null);
         if (!wsGameState) {
@@ -247,6 +299,9 @@ const MultiplayerMatchScreen = () => {
     return (
         <header className="App-header">
             <div className="bckgr"></div>
+            <MusicPlayer audioRef={audioRef} />
+            <SoundEffectPlayer ref={hitSoundRef} src={hitSound} />
+            <SoundEffectPlayer ref={missSoundRef} src={missSound} />
             {/*<div className="fieldEditBigTab" style={{*/}
             {/*    display: 'flex',*/}
             {/*    flexDirection: 'column',*/}
@@ -316,9 +371,24 @@ const MultiplayerMatchScreen = () => {
                 width: '10vh',
                 height: '5vh',
                 transform: 'translate(-50%, -50%)',
-                zIndex: '1101'
+                zIndex: '1101',
+                backgroundColor: 'red'
             }}>Выйти</button>
-
+            <button
+                onClick={() => setSettings(prev => !prev)}  // переключает переменную
+                className="fieldButt"
+                style={{
+                    position: 'absolute',
+                    top: '95vh',
+                    left: 'calc(50% + 90vh)',  // смещение вправо
+                    width: '15vh',
+                    height: '5vh',
+                    transform: 'translate(-50%, -50%)',
+                    zIndex: '1101'
+                }}
+            >
+                Настройки
+            </button>
 
 
             <div className="matchBigTab">
@@ -329,6 +399,7 @@ const MultiplayerMatchScreen = () => {
                     false,
                     undefined,
                     wsGameState.playerBoard.ships // ships для своего поля
+                    , missSoundRef, hitSoundRef
                 )}
 
 
@@ -337,6 +408,7 @@ const MultiplayerMatchScreen = () => {
                     true,
                     wsGameState.playerTurn ? handleCellClick : undefined,
                     wsGameState.computerBoard.ships // ships для противника (должен быть пустой массив)
+                    , missSoundRef, hitSoundRef
                 )}
                 {/*{!wsGameState?.playerTurn && (*/}
                 {/*    <div style={{*/}
@@ -504,6 +576,32 @@ const MultiplayerMatchScreen = () => {
                     Поражение! В следующий раз повезет!
                 </div>}
             </div>}
+
+
+
+            {settings && <div style={{ position: 'absolute', zIndex: '1100', width: '100%', height: '100%', backgroundColor: 'rgb(0,0,0,0.5)' }}>
+                <div style={{ position: 'absolute', zIndex: '1100', width: '30vh', height: '20vh', top: '40vh', left: 'calc(50% - 15vh)', backgroundColor: 'rgb(0,0,0,0.7)', fontSize: '4vh' }}>
+                    <button onClick={() => setSettings(false)} style={{ position: 'absolute', right: '1vh', top: '1vh', backgroundColor: 'red', width: '4vh', height: '3vh', fontSize: '2vh' }}>x</button>
+                    <input
+                        type="checkbox"
+                        checked={flagA}
+                        onChange={handleCheckboxA}
+                        style={{ position: 'absolute', width: '3vh', height: '3vh', right: '2vh', top: '6vh' }}
+                    />
+                    <input
+                        type="checkbox"
+                        checked={flagB}
+                        onChange={handleCheckboxB}
+                        style={{ position: 'absolute', width: '3vh', height: '3vh', right: '2vh', top: '12vh' }}
+                    />
+                    <br />Музыка
+                    <br />Звук
+                </div>
+
+            </div>}
+
+
+
             {/*</div>*/}
         </header>
     );
