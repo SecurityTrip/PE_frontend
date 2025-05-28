@@ -18,6 +18,8 @@ import avaimg6 from './avas/avaimg6.gif';
 import avaimg7 from './avas/avaimg7.gif';
 import avaimg8 from './avas/avaimg8.gif';
 import avaimg9 from './avas/avaimg9.gif';
+import winimg from './ps/win.png';
+import loseimg from './ps/lose.png';
 
 const MultiplayerMatchScreen = () => {
     const navigate = useNavigate();
@@ -219,7 +221,7 @@ const MultiplayerMatchScreen = () => {
                 <div className="bckgr"></div>
                 <div className="fieldEditBigTab" style={{ textAlign: 'center', paddingTop: '20vh' }}>
                     <div style={{ color: 'white', fontSize: '3vh', marginBottom: '2vh' }}>{error}</div>
-                    <button onClick={handleExit} className="fieldButt" style={{zIndex:'1101'} }>Выйти</button>
+                    <button onClick={handleExit} className="fieldButt">Выйти</button>
                 </div>
             </header>
         );
@@ -314,6 +316,7 @@ const MultiplayerMatchScreen = () => {
                 width: '10vh',
                 height: '5vh',
                 transform: 'translate(-50%, -50%)',
+                zIndex: '1101'
             }}>Выйти</button>
 
 
@@ -493,7 +496,13 @@ const MultiplayerMatchScreen = () => {
                 </div>
             </div>
             {moveResult && moveResult.lastMoveGameOver && <div style={{ position: 'absolute', zIndex: '1100', width: '100%', height: '100%', backgroundColor: 'rgb(0,0,0,0.5)' }}>
-                {wsGameState.playerTurn && 'Победа!'}{!wsGameState.playerTurn && 'Поражение!' }
+                {wsGameState.playerTurn && <div>
+                    <img src={winimg} alt='победа' style={{ height: '30vh',marginTop:'30vh' }}></img><br/>
+                    Победа!
+                </div>}{!wsGameState.playerTurn && <div>
+                    <img src={loseimg} alt='поражение' style={{ height: '30vh', marginTop: '30vh' }}></img><br />
+                    Поражение! В следующий раз повезет!
+                </div>}
             </div>}
             {/*</div>*/}
         </header>

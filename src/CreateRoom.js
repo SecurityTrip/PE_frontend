@@ -79,7 +79,7 @@ function CreateRoom() {
                         <button 
                             onClick={handleCreate} 
                             className="copybutt"
-                            style={{ marginTop: '2vh' }}
+                            style={{ marginTop: '2vh',width:'35vh' }}
                         >
                             Создать игру
                         </button>

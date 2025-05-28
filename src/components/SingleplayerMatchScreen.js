@@ -20,6 +20,8 @@ import avaimg7 from '../avas/avaimg7.gif';
 import avaimg8 from '../avas/avaimg8.gif';
 import avaimg9 from '../avas/avaimg9.gif';
 import botava from '../avas/botava.jpg';
+import winimg from '../ps/win.png';
+import loseimg from '../ps/lose.png';
 
 // Вспомогательная функция для рендеринга доски
 export function renderBoard(board, isEnemy, onCellClick, ships) {
@@ -365,6 +367,7 @@ const SingleplayerMatchScreen = () => {
                 width: '10vh',
                 height: '5vh',
                 transform: 'translate(-50%, -50%)',
+                zIndex: '1101'
             }}>Выйти</button>
                 
             <div className="matchBigTab">
@@ -446,6 +449,17 @@ const SingleplayerMatchScreen = () => {
 
             </div>
 
+
+
+            {moveResult && moveResult.gameOver && <div style={{ position: 'absolute', zIndex: '1100', width: '100%', height: '100%', backgroundColor: 'rgb(0,0,0,0.5)' }}>
+                {game && game.gameState === 'PLAYER_WON' && <div>
+                    <img src={winimg} alt='победа' style={{ height: '30vh', marginTop: '30vh' } }></img><br/>
+                    Победа!
+                </div>}{game && game.gameState === 'COMPUTER_WON' && <div>
+                    <img src={loseimg} alt='поражение' style={{ height: '30vh', marginTop: '30vh' }}></img><br />
+                    Поражение! В следующий раз повезет!
+                </div>}
+            </div>}
 
 
 
