@@ -47,15 +47,15 @@ function CreateRoom() {
 
     const handleCopy = () => {
         if (roomCode && roomCode.gameCode) {
-            navigator
-                .then(() => {
+//            navigator.clipboard.writeText(roomCode.gameCode)
+//                .then(() => {
                     localStorage.setItem('multiplayer_gameCode', roomCode.gameCode);
                     localStorage.setItem('multiplayer_role', 'host');
                     navigate('/fieldedit', { state: { mode: 'multiplayer' } }); // Consider navigating to a multiplayer field edit/wait screen
-                })
-                .catch(err => {
-                    setError('Ошибка копирования кода: ' + err.message);
-                });
+//                })
+//                .catch(err => {
+//                    setError('Ошибка копирования кода: ' + err.message);
+//                });
         }
     };
 
