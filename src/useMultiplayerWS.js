@@ -39,7 +39,7 @@ export function useMultiplayerWS() {
 
         console.log('[useMultiplayerWS] Попытка соединения с WebSocket...');
         const client = new Client({
-            webSocketFactory: () => new SockJS('http://localhost:8080/ws'),
+            webSocketFactory: () => new SockJS('http://193.233.103.183:8080/ws'),
             connectHeaders: {
                 Authorization: `Bearer ${token}`
             },
