@@ -105,8 +105,8 @@ function ProfSet() {
             <input style={{ top: '47vh' }} type="password" placeholder="Новый пароль" className="profSetInputs" value={newPass} onChange={e=>setNewPass(e.target.value)} />
             <input style={{ top: '54vh' }} type="password" placeholder="Повторите пароль" className="profSetInputs" value={repeatPass} onChange={e=>setRepeatPass(e.target.value)} />
             <button onClick={saveClick} className="savebutt">Сохранить изменения</button>
-            {msg && <div style={{color:'green',marginTop:'2vh'}}>{msg}</div>}
-            {err && <div style={{color:'red',marginTop:'2vh'}}>{err}</div>}
+            {msg && <div style={{ color: 'green', marginTop: '23vh', zIndex: '1000', backgroundColor: 'white', borderRadius: '2vh' }}>{msg}</div>}
+            {err && <div style={{ color: 'red', marginTop: '23vh', zIndex: '1000', backgroundColor: 'white', borderRadius: '2vh' }}>{err}</div>}
         </MenuComponent>        
     );
 }
