@@ -48,6 +48,14 @@ function Regis() {
             setError('Пароли не совпадают');
             return;
         }
+        if (login.length < 4 || login.length > 8) {
+            setError('Логин должен быть длиной от 4 до 8 символов');
+            return;
+        }
+        if (pass.length < 4 || pass.length > 10) {
+            setError('Логин должен быть длиной от 4 до 10 символов');
+            return;
+        }
         try {
             const response = await fetch('http://193.233.103.183:8080/auth/register', {
                 method: 'POST',

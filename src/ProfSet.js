@@ -48,6 +48,14 @@ function ProfSet() {
             setErr('Пароли не совпадают');
             return;
         }
+        if (login.length < 4 || login.length > 8) {
+            setErr('Логин должен быть длиной от 4 до 8 символов');
+            return;
+        }
+        if (newPass.length < 4 || newPass.length > 10) {
+            setErr('Логин должен быть длиной от 4 до 10 символов');
+            return;
+        }
         // Формируем только изменённые поля
         const req = {};
         if (login) req.username = login;

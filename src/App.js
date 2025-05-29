@@ -390,6 +390,12 @@ function FieldEdit() {
     }
     const location = useLocation();
     const mode = location.state?.mode;
+    const timeoutRef = useRef(null);
+    const waitingJoinRef = useRef(waitingJoin);
+
+    useEffect(() => {
+        waitingJoinRef.current = waitingJoin;
+    }, [waitingJoin]);
     async function handleClick() {
         setError('');
         const ships = shipsRef.current;
@@ -413,6 +419,13 @@ function FieldEdit() {
                 joinRoom({ gameCode: multiplayerCode, ships: shipsData, userId });
                 console.log('[FieldEdit] joinRoom вызван');
                 setWaitingJoin(true);
+                console.log(waitingJoinRef);
+                timeoutRef.current = setTimeout(() => {
+                    console.log('5cсек прошло', waitingJoinRef, joinInfo)
+                    if (waitingJoinRef) {
+                        setError('Истекло время ожидания ответа (возможно, игра не создана)');
+                    }
+                }, 5000);
             } catch (e) {
                 setError('Ошибка подключения к игре: ' + e.message);
             }
@@ -427,6 +440,7 @@ function FieldEdit() {
                 }
                 placeHostShips({ gameCode: multiplayerCode, ships: shipsData, userId });
                 setWaitingJoin(true); // Ожидание второго игрока
+
             } catch (e) {
                 setError('Ошибка размещения кораблей: ' + e.message);
             }

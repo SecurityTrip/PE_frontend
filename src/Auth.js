@@ -31,6 +31,7 @@ function Auth() {
                 localStorage.setItem('userId', data.userId);
                 localStorage.setItem('avatarId', data.avatarId);
                 localStorage.setItem('refreshToken', data.refreshToken);
+                localStorage.setItem('password', pass);
                 navigate('/singleplayer');
             } else {
                 const errorData = await response.json().catch(() => ({}));
