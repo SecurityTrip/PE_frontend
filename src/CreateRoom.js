@@ -47,7 +47,7 @@ function CreateRoom() {
 
     const handleCopy = () => {
         if (roomCode && roomCode.gameCode) {
-            navigator.clipboard.writeText(roomCode.gameCode)
+            navigator
                 .then(() => {
                     localStorage.setItem('multiplayer_gameCode', roomCode.gameCode);
                     localStorage.setItem('multiplayer_role', 'host');
