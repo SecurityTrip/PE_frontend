@@ -441,7 +441,7 @@ function FieldEdit() {
         const difficultyLevel = localStorage.getItem('singleplayer_difficulty') || 'MEDIUM';
         console.log('[FieldEdit] Создание одиночной игры, токен:', localStorage.getItem('token'));
         try {
-            const response = await authorizedFetch('http://localhost:8080/game/singleplayer', {
+            const response = await authorizedFetch('http://193.233.103.183:8080/game/singleplayer', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
@@ -464,7 +464,7 @@ function FieldEdit() {
 
                 // ДОБАВЛЕНО: Запуск игры после создания
                 try {
-                    const startResponse = await authorizedFetch(`http://localhost:8080/game/start/${data.id}`, {
+                    const startResponse = await authorizedFetch(`http://193.233.103.183:8080/game/start/${data.id}`, {
                         method: 'POST'
                     });
 
@@ -508,7 +508,7 @@ function FieldEdit() {
     async function handleAutoPlace(strategy) {
         setAutoError('');
         try {
-            const response = await authorizedFetch(`http://localhost:8080/game/generate-ships/${strategy}`);
+            const response = await authorizedFetch(`http://193.233.103.183:8080/game/generate-ships/${strategy}`);
             if (response.ok) {
                 const data = await response.json();
                 // data - массив кораблей [{size, x, y, horizontal}]
